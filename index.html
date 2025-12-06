@@ -397,6 +397,7 @@
     <div class="mode-toggle">
         <div class="mode-btn active" id="mode-report">신고 등록</div>
         <div class="mode-btn" id="mode-heatmap">히트맵 보기 (관리자)</div>
+        <div class="mode-btn" id="mode-qr">출입·식권 (QR 데모)</div>
     </div>
 </header>
 
@@ -432,37 +433,6 @@
         <div id="selectedThumbs" class="thumb-list"></div>
 
         <button class="primary-btn" id="btnRegister">위험 등록하기</button>
-
-        <!-- ⑤ 출입 / 식권 데모 영역 -->
-        <div class="section-title">⑤ 출입·식권 데모 (QR 기반 아이디어)</div>
-        <div>
-            <div style="font-size:13px; margin-bottom:4px;">작업자 이름 또는 ID</div>
-            <input id="workerIdInput" class="text-input" placeholder="예: 홍길동, W001 등">
-        </div>
-        <div class="small-btn-row">
-            <button id="btnPassQR">출입용 QR 생성</button>
-            <button id="btnMockEntryIn">입장 로그 추가(데모)</button>
-            <button id="btnMockEntryOut">퇴장 로그 추가(데모)</button>
-        </div>
-        <div class="qr-box">
-            <div>
-                <div class="qr-label">출입용 QR (데모)</div>
-                <div id="passQrBox" class="qr-box-inner"></div>
-            </div>
-        </div>
-
-        <div style="margin-top:10px;" class="small-btn-row">
-            <button id="btnMealQR">오늘 식권 QR 발급(데모)</button>
-        </div>
-        <div class="qr-box">
-            <div>
-                <div class="qr-label">식권 QR (데모)</div>
-                <div id="mealQrBox" class="qr-box-inner"></div>
-            </div>
-            <div class="qr-label" id="mealStatus" style="min-width: 160px;">
-                아직 오늘 식권이 발급되지 않았습니다.
-            </div>
-        </div>
 
         <div class="reports-header">
             <h2>등록된 신고 <span id="reportCount">(0건)</span></h2>
@@ -526,6 +496,46 @@
             </thead>
             <tbody id="mealLogBody"></tbody>
         </table>
+    </section>
+
+    <!-- 출입·식권 QR 데모 화면 -->
+    <section id="screen-qr" style="display:none;">
+        <div class="section-title">작업자 정보 입력</div>
+        <div>
+            <div style="font-size:13px; margin-bottom:4px;">작업자 이름 또는 ID</div>
+            <input id="workerIdInput" class="text-input" placeholder="예: 홍길동, W001 등">
+        </div>
+
+        <div class="section-title">출입용 QR</div>
+        <div class="small-btn-row">
+            <button id="btnPassQR">출입용 QR 생성</button>
+            <button id="btnMockEntryIn">입장 로그 추가(데모)</button>
+            <button id="btnMockEntryOut">퇴장 로그 추가(데모)</button>
+        </div>
+        <div class="qr-box">
+            <div>
+                <div class="qr-label">출입용 QR (데모)</div>
+                <div id="passQrBox" class="qr-box-inner"></div>
+            </div>
+        </div>
+
+        <div class="section-title" style="margin-top:18px;">식권 QR</div>
+        <div class="small-btn-row">
+            <button id="btnMealQR">오늘 식권 QR 발급(데모)</button>
+        </div>
+        <div class="qr-box">
+            <div>
+                <div class="qr-label">식권 QR (데모)</div>
+                <div id="mealQrBox" class="qr-box-inner"></div>
+            </div>
+            <div class="qr-label" id="mealStatus" style="min-width: 160px;">
+                아직 오늘 식권이 발급되지 않았습니다.
+            </div>
+        </div>
+
+        <div style="margin-top:12px; font-size:12px; color:#666;">
+            ※ 이 화면에서 생성·기록한 내용은 상단 「히트맵 보기 (관리자)」 탭의 출입/식권 로그 테이블에 나타납니다.
+        </div>
     </section>
 </main>
 
@@ -630,8 +640,11 @@
 
     const modeReportBtn   = document.getElementById("mode-report");
     const modeHeatmapBtn  = document.getElementById("mode-heatmap");
+    const modeQRBtn       = document.getElementById("mode-qr");
+
     const screenReport    = document.getElementById("screen-report");
     const screenHeatmap   = document.getElementById("screen-heatmap");
+    const screenQR        = document.getElementById("screen-qr");
 
     const floorSelect     = document.getElementById("floorSelect");
     const sectorGrid      = document.getElementById("sectorGrid");
@@ -672,21 +685,25 @@
     const entryLogBody    = document.getElementById("entryLogBody");
     const mealLogBody     = document.getElementById("mealLogBody");
 
-    /* === 모드 전환 === */
-    modeReportBtn.addEventListener("click", () => {
-        modeReportBtn.classList.add("active");
-        modeHeatmapBtn.classList.remove("active");
-        screenReport.style.display  = "";
-        screenHeatmap.style.display = "none";
-    });
-    modeHeatmapBtn.addEventListener("click", () => {
-        modeHeatmapBtn.classList.add("active");
-        modeReportBtn.classList.remove("active");
-        screenReport.style.display  = "none";
-        screenHeatmap.style.display = "";
-        updateHeatmap();
-        renderAdminLogs();
-    });
+    /* === 탭 전환 공통 함수 === */
+    function setMode(mode) {
+        modeReportBtn.classList.toggle("active", mode === "report");
+        modeHeatmapBtn.classList.toggle("active", mode === "heatmap");
+        modeQRBtn.classList.toggle("active", mode === "qr");
+
+        screenReport.style.display  = (mode === "report")  ? "" : "none";
+        screenHeatmap.style.display = (mode === "heatmap") ? "" : "none";
+        screenQR.style.display      = (mode === "qr")      ? "" : "none";
+
+        if (mode === "heatmap") {
+            updateHeatmap();
+            renderAdminLogs();
+        }
+    }
+
+    modeReportBtn.addEventListener("click", () => setMode("report"));
+    modeHeatmapBtn.addEventListener("click", () => setMode("heatmap"));
+    modeQRBtn.addEventListener("click", () => setMode("qr"));
 
     /* === 초기화 === */
     function initFloorSelects() {
@@ -984,14 +1001,14 @@
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
+        const mi = String(d.getMinutes()).toString().padStart(2, "0");
         const ss = String(d.getSeconds()).toString().padStart(2, "0");
         return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
     function formatFilenameDate(d) {
         const yy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).toString().padStart(2, "0");
+        const dd = String(d.getDate()).toString().padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
         const mi = String(d.getMinutes()).toString().padStart(2, "0");
         const ss = String(d.getSeconds()).toString().padStart(2, "0");
@@ -1174,7 +1191,7 @@
     renderReportList();
     updateCSVButtonState();
     renderAdminLogs();
+    setMode("report");   // 기본은 신고 탭
 </script>
 </body>
 </html>
-
