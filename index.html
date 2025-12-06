@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- ✅ 모바일 비율 맞추는 핵심 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>넘어짐 위험 관리</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f7;
+        }
+        header {
+            padding: 12px 16px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 18px;
+            margin: 0 0 8px 0;
+        }
+        .mode-toggle {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #d0d0d4;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            background: #ffffff;
+        }
+        .mode-btn.active {
+            background: #007aff;
+            color: #ffffff;
+        }
+
+        main {
+            padding: 12px 16px 80px 16px; /* 아래 CSV 버튼 공간 */
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-weight: 600;
+            margin: 16px 0 6px;
+        }
+
+        .segmented-control {
+            display: inline-flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #d0d0d4;
+        }
+        .segmented-control button {
+            border: none;
+            padding: 6px 10px;
+            background: #ffffff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .segmented-control button.active {
+            background: #007aff;
+            color: #ffffff;
+        }
+
+        .floor-picker {
+            margin-top: 4px;
+        }
+
+        .sector-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .sector-btn {
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            background: #e0e0e4;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .sector-btn.selected {
+            background: #ff9f0a;
+            color: #ffffff;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .row > div {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        select {
+            width: 100%;
+            padding: 6px;
+            font-size: 13px;
+        }
+
+        .photo-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .photo-buttons button {
+            border: none;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-album {
+            background: rgba(0,122,255,0.15);
+            color: #007aff;
+        }
+        .btn-camera {
+            background: rgba(255,149,0,0.15);
+            color: #ff9500;
+        }
+
+        .thumb-list {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-top: 6px;
+        }
+        .thumb-list img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .primary-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            background: #007aff;
+            color: #ffffff;
+        }
+        .primary-btn:disabled {
+            background: #c0c0c8;
+            cursor: default;
+        }
+
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .reports-header h2 {
+            font-size: 15px;
+            margin: 0;
+        }
+
+        .report-card {
+            margin-top: 8px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .report-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .report-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        .report-delete {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            border: none;
+            background: #ff3b30;
+            color: #ffffff;
+            border-radius: 999px;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .report-photos {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            overflow-x: auto;
+        }
+        .report-photos img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* 히트맵 */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .heat-cell {
+            border-radius: 8px;
+            padding: 10px;
+            color: #ffffff;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* 하단 CSV 버튼바 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 16px;
+            background: rgba(248,248,250,0.95);
+            box-shadow: 0 -1px 4px rgba(0,0,0,0.12);
+            display: flex;
+            justify-content: center;
+        }
+        .csv-btn {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ffffff;
+            background: #34c759;
+        }
+        .csv-btn.disabled {
+            background: #c0c0c8;
+            cursor: default;
+        }
+
+        /* 이미지 모달 */
+        .image-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .image-modal-inner {
+            position: relative;
+            max-width: 95vw;
+            max-height: 90vh;
+        }
+        .image-modal-inner img {
+            max-width: 95vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .image-modal-close {
+            position: absolute;
+            right: -6px;
+            top: -6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.7);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* ✅ 모바일 최적화 */
+        @media (max-width: 600px) {
+            header {
+                padding: 10px 12px;
+            }
+            main {
+                padding: 10px 12px 80px 12px;
+            }
+            h1 {
+                font-size: 16px;
+            }
+            .section-title {
+                margin-top: 12px;
+                font-size: 14px;
+            }
+            .row {
+                flex-direction: column;
+            }
+            .row > div {
+                min-width: 0;
+            }
+            .sector-grid,
+            .heatmap-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .report-card {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>넘어짐 위험 관리</h1>
+    <div class="mode-toggle">
+        <div class="mode-btn active" id="mode-report">신고 등록</div>
+        <div class="mode-btn" id="mode-heatmap">히트맵 보기</div>
+    </div>
+</header>
+
+<main>
+    <!-- 신고 등록 화면 -->
+    <section id="screen-report">
+        <div class="section-title">① 층 선택</div>
+        <div class="floor-picker">
+            <select id="floorSelect"></select>
+        </div>
+
+        <div class="section-title">② 평면도 섹터 선택</div>
+        <div id="sectorGrid" class="sector-grid"></div>
+
+        <div class="section-title">③ 위험 유형 & 작업종류</div>
+        <div class="row">
+            <div>
+                <div style="font-size: 13px;">위험 유형</div>
+                <select id="hazardSelect"></select>
+            </div>
+            <div>
+                <div style="font-size: 13px;">작업 종류</div>
+                <select id="workSelect"></select>
+            </div>
+        </div>
+
+        <div class="section-title">④ 사진 첨부 (여러 장 가능)</div>
+        <div class="photo-buttons">
+            <button class="btn-album" id="btnAlbum">앨범에서 선택</button>
+            <button class="btn-camera" id="btnCamera">카메라 촬영</button>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+        </div>
+        <div id="selectedThumbs" class="thumb-list"></div>
+
+        <button class="primary-btn" id="btnRegister">위험 등록하기</button>
+
+        <div class="reports-header">
+            <h2>등록된 신고 <span id="reportCount">(0건)</span></h2>
+        </div>
+        <div id="reportList"></div>
+    </section>
+
+    <!-- 히트맵 화면 -->
+    <section id="screen-heatmap" style="display:none;">
+        <div class="section-title">층 선택</div>
+        <div class="floor-picker">
+            <select id="heatFloorSelect"></select>
+        </div>
+        <div style="font-size: 13px; margin-top: 6px;">
+            현재 층 섹터별 신고 히트맵<br>
+            <span style="font-size: 11px; color:#666;">※ 색이 진할수록 신고 횟수가 많은 구역입니다.</span>
+        </div>
+        <div id="heatmapGrid" class="heatmap-grid"></div>
+    </section>
+</main>
+
+<!-- 하단 CSV 버튼 -->
+<div class="bottom-bar">
+    <button id="btnCSV" class="csv-btn disabled">
+        <span>📤</span><span>CSV로 내보내기</span>
+    </button>
+</div>
+
+<!-- 이미지 확대 모달 -->
+<div id="imageModal" class="image-modal-backdrop" style="display:none;">
+    <div class="image-modal-inner">
+        <button class="image-modal-close" id="imageModalClose">✕</button>
+        <img id="imageModalImg" src="">
+    </div>
+</div>
+
+<script>
+    /* === 이하 JS는 동일 === */
+    const floors = [
+        { id: "B1", name: "지하 1층", sectors: ["A-1", "A-2", "B-1", "B-2"] },
+        { id: "1F", name: "1층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
+        { id: "2F", name: "2층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
+        { id: "3F", name: "3층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
+        { id: "4F", name: "4층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
+        { id: "5F", name: "5층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
+        { id: "6F", name: "6층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] }
+    ];
+
+    const hazardTypes = [
+        { id: "단차", label: "단차" },
+        { id: "미끄러짐", label: "미끄러짐" },
+        { id: "장애물", label: "장애물" },
+        { id: "기타", label: "기타" }
+    ];
+
+    const workTypes = [
+        { id: "이동", label: "이동" },
+        { id: "운반", label: "운반" },
+        { id: "설치", label: "설치" },
+        { id: "정리", label: "정리" },
+        { id: "기타", label: "기타" }
+    ];
+
+    let reports = [];
+    let selectedFloorIndex = 0;
+    let selectedSectorId = null;
+    let selectedHazard = hazardTypes[0].id;
+    let selectedWork = workTypes[0].id;
+    let selectedImages = [];
+
+    const modeReportBtn = document.getElementById("mode-report");
+    const modeHeatmapBtn = document.getElementById("mode-heatmap");
+    const screenReport = document.getElementById("screen-report");
+    const screenHeatmap = document.getElementById("screen-heatmap");
+
+    const floorSelect = document.getElementById("floorSelect");
+    const sectorGrid = document.getElementById("sectorGrid");
+    const hazardSelect = document.getElementById("hazardSelect");
+    const workSelect = document.getElementById("workSelect");
+
+    const selectedThumbs = document.getElementById("selectedThumbs");
+    const fileInput = document.getElementById("fileInput");
+    const btnAlbum = document.getElementById("btnAlbum");
+    const btnCamera = document.getElementById("btnCamera");
+    const btnRegister = document.getElementById("btnRegister");
+
+    const reportList = document.getElementById("reportList");
+    const reportCount = document.getElementById("reportCount");
+    const btnCSV = document.getElementById("btnCSV");
+
+    const heatFloorSelect = document.getElementById("heatFloorSelect");
+    const heatmapGrid = document.getElementById("heatmapGrid");
+
+    const imageModal = document.getElementById("imageModal");
+    const imageModalImg = document.getElementById("imageModalImg");
+    const imageModalClose = document.getElementById("imageModalClose");
+
+    modeReportBtn.addEventListener("click", () => {
+        modeReportBtn.classList.add("active");
+        modeHeatmapBtn.classList.remove("active");
+        screenReport.style.display = "";
+        screenHeatmap.style.display = "none";
+    });
+    modeHeatmapBtn.addEventListener("click", () => {
+        modeHeatmapBtn.classList.add("active");
+        modeReportBtn.classList.remove("active");
+        screenReport.style.display = "none";
+        screenHeatmap.style.display = "";
+        updateHeatmap();
+    });
+
+    function initFloorSelects() {
+        floors.forEach((f, index) => {
+            const option1 = document.createElement("option");
+            option1.value = index;
+            option1.textContent = f.name;
+            floorSelect.appendChild(option1);
+
+            const option2 = document.createElement("option");
+            option2.value = index;
+            option2.textContent = f.name;
+            heatFloorSelect.appendChild(option2);
+        });
+
+        floorSelect.value = "0";
+        heatFloorSelect.value = "0";
+        renderSectorButtons();
+    }
+
+    function renderSectorButtons() {
+        sectorGrid.innerHTML = "";
+        const floor = floors[selectedFloorIndex];
+        floor.sectors.forEach(sectorId => {
+            const btn = document.createElement("div");
+            btn.className = "sector-btn" + (selectedSectorId === sectorId ? " selected" : "");
+            btn.textContent = sectorId + " 구역";
+            btn.dataset.sectorId = sectorId;
+            btn.addEventListener("click", () => {
+                selectedSectorId = sectorId;
+                renderSectorButtons();
+                updateRegisterButtonState();
+            });
+            sectorGrid.appendChild(btn);
+        });
+    }
+
+    function initHazardWorkSelects() {
+        hazardTypes.forEach(h => {
+            const opt = document.createElement("option");
+            opt.value = h.id;
+            opt.textContent = h.label;
+            hazardSelect.appendChild(opt);
+        });
+        workTypes.forEach(w => {
+            const opt = document.createElement("option");
+            opt.value = w.id;
+            opt.textContent = w.label;
+            workSelect.appendChild(opt);
+        });
+    }
+
+    floorSelect.addEventListener("change", () => {
+        selectedFloorIndex = parseInt(floorSelect.value, 10);
+        selectedSectorId = null;
+        renderSectorButtons();
+        updateRegisterButtonState();
+    });
+
+    hazardSelect.addEventListener("change", () => {
+        selectedHazard = hazardSelect.value;
+    });
+    workSelect.addEventListener("change", () => {
+        selectedWork = workSelect.value;
+    });
+
+    btnAlbum.addEventListener("click", () => {
+        fileInput.removeAttribute("capture");
+        fileInput.click();
+    });
+
+    btnCamera.addEventListener("click", () => {
+        fileInput.setAttribute("capture", "environment");
+        fileInput.click();
+    });
+
+    fileInput.addEventListener("change", (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+            if (!file.type.startsWith("image/")) return;
+            const url = URL.createObjectURL(file);
+            selectedImages.push({ file, url });
+        });
+        renderSelectedThumbs();
+        fileInput.value = "";
+    });
+
+    function renderSelectedThumbs() {
+        selectedThumbs.innerHTML = "";
+        selectedImages.forEach(imgObj => {
+            const img = document.createElement("img");
+            img.src = imgObj.url;
+            selectedThumbs.appendChild(img);
+        });
+    }
+
+    btnRegister.addEventListener("click", () => {
+        if (!selectedSectorId) return;
+
+        const floor = floors[selectedFloorIndex];
+        const floorId = floor.id;
+        const floorName = floor.name;
+        const sectorId = selectedSectorId;
+        const sectorName = sectorId + " 구역";
+        const locationCode = `${floorId}-${sectorId}`;
+        const hazardType = selectedHazard;
+        const workType = selectedWork;
+        const date = new Date();
+
+        const images = selectedImages.map(imgObj => ({
+            url: imgObj.url
+        }));
+
+        const report = {
+            id: crypto.randomUUID(),
+            floorId,
+            floorName,
+            sectorId,
+            sectorName,
+            locationCode,
+            hazardType,
+            workType,
+            date,
+            images
+        };
+
+        reports.unshift(report);
+
+        selectedSectorId = null;
+        selectedImages = [];
+        renderSelectedThumbs();
+        renderSectorButtons();
+        renderReportList();
+        updateRegisterButtonState();
+        updateCSVButtonState();
+    });
+
+    function deleteReport(id) {
+        reports = reports.filter(r => r.id !== id);
+        renderReportList();
+        updateCSVButtonState();
+    }
+
+    function renderReportList() {
+        reportList.innerHTML = "";
+        reportCount.textContent = `(${reports.length}건)`;
+
+        reports.forEach(report => {
+            const card = document.createElement("div");
+            card.className = "report-card";
+
+            const title = document.createElement("div");
+            title.className = "report-title";
+            title.textContent = `${report.floorName} · ${report.sectorName}`;
+
+            const meta1 = document.createElement("div");
+            meta1.className = "report-meta";
+            meta1.textContent = `위치코드: ${report.locationCode}`;
+
+            const meta2 = document.createElement("div");
+            meta2.className = "report-meta";
+            meta2.textContent = `유형: ${report.hazardType} / 작업: ${report.workType}`;
+
+            const meta3 = document.createElement("div");
+            meta3.className = "report-meta";
+            meta3.textContent = formatDate(report.date);
+
+            const del = document.createElement("button");
+            del.className = "report-delete";
+            del.textContent = "🗑";
+            del.addEventListener("click", () => deleteReport(report.id));
+
+            card.appendChild(title);
+            card.appendChild(meta1);
+            card.appendChild(meta2);
+            card.appendChild(meta3);
+            card.appendChild(del);
+
+            if (report.images && report.images.length > 0) {
+                const photoRow = document.createElement("div");
+                photoRow.className = "report-photos";
+                report.images.forEach((imgObj, idx) => {
+                    const img = document.createElement("img");
+                    img.src = imgObj.url;
+                    img.addEventListener("click", () => {
+                        openImageModal(imgObj.url);
+                    });
+                    photoRow.appendChild(img);
+                });
+                card.appendChild(photoRow);
+            }
+
+            reportList.appendChild(card);
+        });
+    }
+
+    function updateRegisterButtonState() {
+        btnRegister.disabled = !selectedSectorId;
+    }
+
+    function openImageModal(url) {
+        imageModalImg.src = url;
+        imageModal.style.display = "flex";
+    }
+    imageModalClose.addEventListener("click", () => {
+        imageModal.style.display = "none";
+        imageModalImg.src = "";
+    });
+    imageModal.addEventListener("click", (e) => {
+        if (e.target === imageModal) {
+            imageModal.style.display = "none";
+            imageModalImg.src = "";
+        }
+    });
+
+    function updateCSVButtonState() {
+        if (reports.length === 0) {
+            btnCSV.classList.add("disabled");
+        } else {
+            btnCSV.classList.remove("disabled");
+        }
+    }
+
+    btnCSV.addEventListener("click", () => {
+        if (reports.length === 0) return;
+
+        let csv = "floorId,floorName,sectorId,sectorName,locationCode,hazardType,workType,date,imageCount\n";
+
+        reports.forEach(r => {
+            const dateStr = formatCSVDate(r.date);
+            const line = [
+                r.floorId,
+                quote(r.floorName),
+                r.sectorId,
+                quote(r.sectorName),
+                r.locationCode,
+                quote(r.hazardType),
+                quote(r.workType),
+                dateStr,
+                r.images ? r.images.length : 0
+            ].join(",");
+            csv += line + "\n";
+        });
+
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([bom, csv], { type: "text/csv;charset=utf-8;" });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const ts = new Date();
+        const name = `Reports_${formatFilenameDate(ts)}.csv`;
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    function quote(str) {
+        return `"${String(str).replace(/"/g, '""')}"`;
+    }
+
+    function formatDate(d) {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mi = String(d.getMinutes()).padStart(2, "0");
+        return `${yy}.${mm}.${dd} ${hh}:${mi}`;
+    }
+
+    function formatCSVDate(d) {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mi = String(d.getMinutes()).padStart(2, "0");
+        const ss = String(d.getSeconds()).padStart(2, "0");
+        return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    }
+
+    function formatFilenameDate(d) {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mi = String(d.getMinutes()).padStart(2, "0");
+        const ss = String(d.getSeconds()).padStart(2, "0");
+        return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
+    }
+
+    heatFloorSelect.addEventListener("change", () => {
+        selectedFloorIndex = parseInt(heatFloorSelect.value, 10);
+        updateHeatmap();
+    });
+
+    function updateHeatmap() {
+        heatmapGrid.innerHTML = "";
+        const floor = floors[selectedFloorIndex];
+
+        floor.sectors.forEach(sectorId => {
+            const count = reports.filter(r => r.floorId === floor.id && r.sectorId === sectorId).length;
+            const cell = document.createElement("div");
+            cell.className = "heat-cell";
+            cell.style.background = heatColor(count);
+            cell.innerHTML = `<div>${sectorId} 구역</div><div style="font-size:12px;">${count}건</div>`;
+            heatmapGrid.appendChild(cell);
+        });
+    }
+
+    function heatColor(count) {
+        if (count === 0) return "rgba(52,199,89,0.5)";
+        if (count <= 2) return "rgba(255,204,0,0.8)";
+        if (count <= 4) return "rgba(255,149,0,0.85)";
+        return "rgba(255,59,48,0.9)";
+    }
+
+    initFloorSelects();
+    initHazardWorkSelects();
+    renderReportList();
+    updateCSVButtonState();
+</script>
+</body>
+</html>
