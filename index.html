@@ -2,7 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <!-- 모바일 비율 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>건설 현장 위험 관리</title>
     <style>
         * { box-sizing: border-box; }
@@ -198,10 +200,10 @@
             cursor: pointer;
         }
 
-        /* 히트맵 공통 */
+        /* 히트맵 기본 그리드 (B1용) */
         .heatmap-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             margin-top: 10px;
         }
@@ -213,7 +215,7 @@
             text-align: center;
         }
 
-        /* 평면도 위 히트맵/선택 */
+        /* 평면도 위 히트맵 / 선택 */
         .floorplan-wrapper {
             position: relative;
             width: 100%;
@@ -225,7 +227,7 @@
             display: block;
         }
         #floorplanCells,
-        #reportFloorplanCells {
+        #sectorFloorplanCells {
             position: absolute;
             inset: 0;
         }
@@ -237,27 +239,13 @@
             justify-content: center;
             border-radius: 8px;
             color: #ffffff;
-            font-size: 12px;
-            text-align: center;
-            padding: 2px;
-            pointer-events: none;
-        }
-
-        /* 신고 화면에서 클릭 가능한 구역 선택용 셀 */
-        .floorplan-cell-select {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
             font-size: 11px;
             text-align: center;
             padding: 2px;
+        }
+        .floorplan-cell-select {
             cursor: pointer;
             background: rgba(0,122,255,0.10);
-            color: #000;
-            border: 1px solid rgba(0,0,0,0.15);
         }
         .floorplan-cell-select.selected {
             background: rgba(255,159,10,0.80);
@@ -265,22 +253,32 @@
             border: 2px solid #ff9500;
         }
 
-        /* CSV 버튼 */
+        /* 날짜 필터 */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .filter-row label {
+            font-size: 13px;
+        }
+        .filter-row input[type="date"] {
+            padding: 4px 6px;
+            font-size: 13px;
+        }
         .csv-btn {
             border: none;
             border-radius: 20px;
             padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 6px;
             color: #ffffff;
             background: #34c759;
-        }
-        .csv-btn.disabled {
-            background: #c0c0c8;
-            cursor: default;
         }
 
         /* 이미지 모달 */
@@ -318,7 +316,7 @@
             font-size: 16px;
         }
 
-        /* 입력 공통 */
+        /* 출입/식권 데모용 입력 */
         .text-input {
             width: 100%;
             padding: 8px;
@@ -379,6 +377,17 @@
             font-weight: 600;
         }
 
+        textarea {
+            width: 100%;
+            min-height: 60px;
+            resize: vertical;
+            padding: 6px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d4;
+        }
+
+        /* 모바일 */
         @media (max-width: 600px) {
             header { padding: 10px 12px; }
             main   { padding: 10px 12px 32px 12px; }
@@ -389,10 +398,6 @@
             }
             .row { flex-direction: column; }
             .row > div { min-width: 0; }
-            .sector-grid,
-            .heatmap-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
             .report-card { padding: 10px; }
         }
     </style>
@@ -408,7 +413,7 @@
 </header>
 
 <main>
-    <!-- ① 신고 등록 화면 -->
+    <!-- 신고 등록 화면 -->
     <section id="screen-report">
         <div class="section-title">① 층 선택</div>
         <div class="floor-picker">
@@ -416,27 +421,23 @@
         </div>
 
         <div class="section-title">② 평면도 섹터 선택</div>
-
-        <!-- B1 등 단순층 → 버튼 -->
+        <!-- B1용 버튼 그리드 -->
         <div id="sectorGrid" class="sector-grid"></div>
-
-        <!-- 1F~6F → 평면도에서 직접 선택 -->
-        <div id="reportFloorplan" class="floorplan-wrapper" style="display:none;">
+        <!-- 1~6층용 평면도 선택 -->
+        <div id="sectorFloorplan" class="floorplan-wrapper" style="display:none;">
             <img src="plan_6f.png" alt="층 평면도" class="floorplan-img">
-            <div id="reportFloorplanCells"></div>
+            <div id="sectorFloorplanCells"></div>
         </div>
 
-        <div class="section-title">③ 위험 유형 & 작업종류</div>
+        <div class="section-title">③ 위험 유형 & 기타 사항</div>
         <div class="row">
             <div>
                 <div style="font-size: 13px;">위험 유형</div>
                 <select id="hazardSelect"></select>
             </div>
-            <div>
-                <div style="font-size: 13px;">작업 종류</div>
-                <select id="workSelect"></select>
-            </div>
         </div>
+        <div style="margin-top:6px; font-size:13px;">기타 사항 (상세 위치, 상황 등 자유 입력)</div>
+        <textarea id="hazardDetail" placeholder="예: 통로 중앙에 자재 더미, 야간 작업으로 조도 부족 등"></textarea>
 
         <div class="section-title">④ 사진 첨부 (여러 장 가능)</div>
         <div class="photo-buttons">
@@ -454,7 +455,7 @@
         <div id="reportList"></div>
     </section>
 
-    <!-- ② 히트맵 + 관리자 로그 화면 -->
+    <!-- 히트맵 + 관리자 로그 화면 -->
     <section id="screen-heatmap" style="display:none;">
         <div class="section-title">층 선택</div>
         <div class="floor-picker">
@@ -465,42 +466,39 @@
             <span style="font-size: 11px; color:#666;">※ 색이 진할수록 신고 횟수가 많은 구역입니다.</span>
         </div>
 
-        <!-- 평면도 히트맵 (1F~6F) -->
+        <!-- 평면도 히트맵 (1~6층) -->
         <div id="heatmapFloorplan" class="floorplan-wrapper" style="display:none;">
             <img src="plan_6f.png" alt="층 평면도" class="floorplan-img">
             <div id="floorplanCells"></div>
         </div>
 
-        <!-- B1 등 기본 그리드 히트맵 -->
+        <!-- B1 히트맵용 기본 그리드 -->
         <div id="heatmapGrid" class="heatmap-grid"></div>
 
-        <!-- CSV 내보내기 -->
-        <div class="section-title" style="margin-top:18px;">CSV 내보내기 (관리자용)</div>
-        <div class="row">
-            <div>
-                <div style="font-size:13px;">시작 날짜</div>
-                <input type="date" id="csvStart" class="text-input">
-            </div>
-            <div>
-                <div style="font-size:13px;">끝 날짜</div>
-                <input type="date" id="csvEnd" class="text-input">
-            </div>
-            <div style="align-self:flex-end; min-width:150px;">
-                <button id="btnCSV" class="csv-btn" style="width:100%; margin-top:4px;">
-                    <span>📤</span><span>CSV로 내보내기</span>
-                </button>
-            </div>
+        <!-- CSV 내보내기 (날짜 필터) -->
+        <div class="section-title" style="margin-top:20px;">신고 내역 CSV 내보내기</div>
+        <div class="filter-row">
+            <label for="startDate">시작일</label>
+            <input type="date" id="startDate">
+            <label for="endDate">종료일</label>
+            <input type="date" id="endDate">
+            <button id="btnCSVExport" class="csv-btn">
+                <span>📤</span><span>CSV로 내보내기</span>
+            </button>
+        </div>
+        <div style="font-size:11px; color:#666; margin-top:4px;">
+            * 날짜를 비워두면 전체 기간 데이터를 내보냅니다.
         </div>
 
         <!-- 관리자용 출입/식권 로그 -->
-        <div class="section-title" style="margin-top:18px;">출입 로그 (데모)</div>
+        <div class="section-title" style="margin-top:24px;">출입 로그 (데모)</div>
         <table class="log-table">
             <thead>
-                <tr>
-                    <th>시간</th>
-                    <th>작업자</th>
-                    <th>구분</th>
-                </tr>
+            <tr>
+                <th>시간</th>
+                <th>작업자</th>
+                <th>구분</th>
+            </tr>
             </thead>
             <tbody id="entryLogBody"></tbody>
         </table>
@@ -508,25 +506,25 @@
         <div class="section-title" style="margin-top:18px;">식권 발급 로그 (데모)</div>
         <table class="log-table">
             <thead>
-                <tr>
-                    <th>시간</th>
-                    <th>작업자</th>
-                    <th>토큰</th>
-                </tr>
+            <tr>
+                <th>시간</th>
+                <th>작업자</th>
+                <th>토큰</th>
+            </tr>
             </thead>
             <tbody id="mealLogBody"></tbody>
         </table>
     </section>
 
-    <!-- ③ 출입·식권 QR 데모 화면 -->
+    <!-- 출입·식권 QR 데모 화면 -->
     <section id="screen-qr" style="display:none;">
-        <div class="section-title">① 작업자 정보</div>
+        <div class="section-title">작업자 정보</div>
         <div>
             <div style="font-size:13px; margin-bottom:4px;">작업자 이름 또는 ID</div>
             <input id="workerIdInput" class="text-input" placeholder="예: 홍길동, W001 등">
         </div>
 
-        <div class="section-title">② 출입용 QR</div>
+        <div class="section-title" style="margin-top:14px;">출입용 QR</div>
         <div class="small-btn-row">
             <button id="btnPassQR">출입용 QR 생성</button>
             <button id="btnMockEntryIn">입장 로그 추가(데모)</button>
@@ -539,7 +537,7 @@
             </div>
         </div>
 
-        <div class="section-title" style="margin-top:14px;">③ 식권 QR</div>
+        <div class="section-title" style="margin-top:18px;">식권 QR</div>
         <div class="small-btn-row">
             <button id="btnMealQR">오늘 식권 QR 발급(데모)</button>
         </div>
@@ -553,9 +551,8 @@
             </div>
         </div>
 
-        <div style="margin-top:16px; font-size:12px; color:#666;">
-            ※ QR 버튼으로 추가되는 출입/식권 로그는 상단의
-            <strong>히트맵 보기(관리자)</strong> 탭에서 표 형태로 확인할 수 있습니다.
+        <div style="margin-top:16px; font-size:11px; color:#666;">
+            * 실제 현장 적용 시 이 QR 데이터는 출입관리 시스템 / 식당 시스템과 연동해서 사용하도록 설계할 수 있습니다.
         </div>
     </section>
 </main>
@@ -572,110 +569,97 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-    /* === 기본 데이터 구조 === */
+    /* === 유틸 === */
+    function makeSectors(prefix) {
+        const arr = [];
+        for (let i = 1; i <= 34; i++) arr.push(`${prefix}-${i}`);
+        return arr;
+    }
 
-    // 34구역 공통 레이아웃 (1F~6F)
-    const sectorLayout34 = {
-        "1":  { x: 0.019,  y: 0.383, w: 0.050,  h: 0.243 },
-        "2":  { x: 0.072,  y: 0.383, w: 0.087,  h: 0.243 },
-        "3":  { x: 0.1639, y: 0.383, w: 0.103,  h: 0.243 },
-        "4":  { x: 0.270,  y: 0.383, w: 0.072,  h: 0.243 },
-
-        "5":  { x: 0.346,  y: 0.383, w: 0.045,  h: 0.243 },
-
-        "6":  { x: 0.019,  y: 0.633, w: 0.151,  h: 0.0755 },
-        "7":  { x: 0.170,  y: 0.633, w: 0.113,  h: 0.0755 },
-        "8":  { x: 0.283,  y: 0.633, w: 0.113,  h: 0.0755 },
-
-        "9":  { x: 0.019,  y: 0.715, w: 0.050,  h: 0.243 },
-        "10": { x: 0.072,  y: 0.715, w: 0.046,  h: 0.243 },
-        "11": { x: 0.123,  y: 0.715, w: 0.046,  h: 0.243 },
-        "12": { x: 0.173,  y: 0.715, w: 0.052,  h: 0.243 },
-        "13": { x: 0.2275, y: 0.715, w: 0.0525, h: 0.243 },
-        "14": { x: 0.284,  y: 0.715, w: 0.052,  h: 0.243 },
-        "15": { x: 0.3403, y: 0.715, w: 0.055,  h: 0.243 },
-
-        "16": { x: 0.397,  y: 0.383, w: 0.105,  h: 0.400 },
-
-        "17": { x: 0.505,  y: 0.383, w: 0.047,  h: 0.243 },
-        "18": { x: 0.554,  y: 0.383, w: 0.065,  h: 0.243 },
-
-        "19": { x: 0.622,  y: 0.383, w: 0.101,  h: 0.243 },
-        "20": { x: 0.728,  y: 0.383, w: 0.066,  h: 0.243 },
-
-        "21": { x: 0.795,  y: 0.383, w: 0.045,  h: 0.243 },
-        "22": { x: 0.503,  y: 0.633, w: 0.155,  h: 0.0755 },
-        "23": { x: 0.659,  y: 0.633, w: 0.185,  h: 0.0755 },
-
-        "24": { x: 0.505,  y: 0.715, w: 0.068,  h: 0.243 },
-        "25": { x: 0.577,  y: 0.715, w: 0.080,  h: 0.243 },
-        "26": { x: 0.661,  y: 0.715, w: 0.065,  h: 0.243 },
-        "27": { x: 0.730,  y: 0.715, w: 0.108,  h: 0.243 },
-        "28": { x: 0.842,  y: 0.715, w: 0.150,  h: 0.243 },
-
-        "29": { x: 0.845,  y: 0.383, w: 0.036,  h: 0.330 },
-
-        "30": { x: 0.885,  y: 0.485, w: 0.107,  h: 0.226 },
-        "31": { x: 0.885,  y: 0.254, w: 0.107,  h: 0.226 },
-        "32": { x: 0.885,  y: 0.020, w: 0.107,  h: 0.2275 },
-        "33": { x: 0.845,  y: 0.020, w: 0.036,  h: 0.363 },
-        "34": { x: 0.727,  y: 0.020, w: 0.115,  h: 0.357 }
-    };
-
+    /* === 층 / 섹터 정의 === */
     const floors = [
-        { id: "B1", name: "지하 1층", sectors: ["A-1", "A-2", "A-3", "A-4"] },
-        { id: "1F", name: "1층",  sectors: Array.from({length:34}, (_,i)=>`B-${i+1}`) },
-        { id: "2F", name: "2층",  sectors: Array.from({length:34}, (_,i)=>`C-${i+1}`) },
-        { id: "3F", name: "3층",  sectors: Array.from({length:34}, (_,i)=>`D-${i+1}`) },
-        { id: "4F", name: "4층",  sectors: Array.from({length:34}, (_,i)=>`E-${i+1}`) },
-        { id: "5F", name: "5층",  sectors: Array.from({length:34}, (_,i)=>`F-${i+1}`) },
-        { id: "6F", name: "6층",  sectors: Array.from({length:34}, (_,i)=>`G-${i+1}`) }
+        { id: "B1", name: "지하 1층", sectors: ["A-1","A-2","A-3","A-4"] }, // B1 원래대로
+        { id: "1F", name: "1층",      sectors: makeSectors("B") },
+        { id: "2F", name: "2층",      sectors: makeSectors("C") },
+        { id: "3F", name: "3층",      sectors: makeSectors("D") },
+        { id: "4F", name: "4층",      sectors: makeSectors("E") },
+        { id: "5F", name: "5층",      sectors: makeSectors("F") },
+        { id: "6F", name: "6층",      sectors: makeSectors("G") }
     ];
 
     const hazardTypes = [
-        { id: "단차",     label: "단차" },
-        { id: "미끄러짐", label: "미끄러짐" },
-        { id: "장애물",   label: "장애물" },
-        { id: "기타",     label: "기타" }
+        { id: "단차",       label: "단차" },
+        { id: "미끄러짐",   label: "미끄러짐(물·기름·먼지 등)" },
+        { id: "정리불량",   label: "정리 불량(자재/폐기물 방치)" },
+        { id: "통로막힘",   label: "통로 막힘(자재 적치·장비 등)" },
+        { id: "추락낙하",   label: "추락·낙하 위험(개구부, 난간 미설치 등)" },
+        { id: "조도불량",   label: "조도 부족/시야 불량" },
+        { id: "전도넘어짐", label: "전도·넘어짐 위험(케이블, 호스 등)" },
+        { id: "기타",       label: "기타" }
     ];
 
-    const workTypes = [
-        { id: "이동", label: "이동" },
-        { id: "운반", label: "운반" },
-        { id: "설치", label: "설치" },
-        { id: "정리", label: "정리" },
-        { id: "기타", label: "기타" }
-    ];
+    /* === 평면도 레이아웃(34개) : 1~6층 공통 === */
+    const sectorLayout = {
+        1:  { x: 0.019,  y: 0.383, w: 0.050,  h: 0.243 },
+        2:  { x: 0.072,  y: 0.383, w: 0.087,  h: 0.243 },
+        3:  { x: 0.1639, y: 0.383, w: 0.103,  h: 0.243 },
+        4:  { x: 0.270,  y: 0.383, w: 0.072,  h: 0.243 },
+        5:  { x: 0.346,  y: 0.383, w: 0.045,  h: 0.243 },
+        6:  { x: 0.019,  y: 0.633, w: 0.151,  h: 0.0755 },
+        7:  { x: 0.170,  y: 0.633, w: 0.113,  h: 0.0755 },
+        8:  { x: 0.283,  y: 0.633, w: 0.113,  h: 0.0755 },
+        9:  { x: 0.019,  y: 0.715, w: 0.050,  h: 0.243 },
+        10: { x: 0.072,  y: 0.715, w: 0.046,  h: 0.243 },
+        11: { x: 0.123,  y: 0.715, w: 0.046,  h: 0.243 },
+        12: { x: 0.173,  y: 0.715, w: 0.052,  h: 0.243 },
+        13: { x: 0.2275, y: 0.715, w: 0.0525, h: 0.243 },
+        14: { x: 0.284,  y: 0.715, w: 0.052,  h: 0.243 },
+        15: { x: 0.3403, y: 0.715, w: 0.055,  h: 0.243 },
+        16: { x: 0.397,  y: 0.383, w: 0.105,  h: 0.400 },
+        17: { x: 0.505,  y: 0.383, w: 0.047,  h: 0.243 },
+        18: { x: 0.554,  y: 0.383, w: 0.065,  h: 0.243 },
+        19: { x: 0.622,  y: 0.383, w: 0.101,  h: 0.243 },
+        20: { x: 0.728,  y: 0.383, w: 0.066,  h: 0.243 },
+        21: { x: 0.795,  y: 0.383, w: 0.045,  h: 0.243 },
+        22: { x: 0.503,  y: 0.633, w: 0.155,  h: 0.0755 },
+        23: { x: 0.659,  y: 0.633, w: 0.185,  h: 0.0755 },
+        24: { x: 0.505,  y: 0.715, w: 0.068,  h: 0.243 },
+        25: { x: 0.577,  y: 0.715, w: 0.080,  h: 0.243 },
+        26: { x: 0.661,  y: 0.715, w: 0.065,  h: 0.243 },
+        27: { x: 0.730,  y: 0.715, w: 0.108,  h: 0.243 },
+        28: { x: 0.842,  y: 0.715, w: 0.150,  h: 0.243 },
+        29: { x: 0.845,  y: 0.383, w: 0.036,  h: 0.330 },
+        30: { x: 0.885,  y: 0.485, w: 0.107,  h: 0.226 },
+        31: { x: 0.885,  y: 0.254, w: 0.107,  h: 0.226 },
+        32: { x: 0.885,  y: 0.020, w: 0.107,  h: 0.2275 },
+        33: { x: 0.845,  y: 0.020, w: 0.036,  h: 0.363 },
+        34: { x: 0.727,  y: 0.020, w: 0.115,  h: 0.357 }
+    };
 
     let reports = [];
     let selectedFloorIndex = 0;
     let selectedSectorId = null;
     let selectedHazard = hazardTypes[0].id;
-    let selectedWork = workTypes[0].id;
     let selectedImages = [];
 
     let entryLogs = [];
     let mealLogs  = [];
-
     let passQrInstance = null;
     let mealQrInstance = null;
 
-    /* === DOM 참조 === */
     const modeReportBtn   = document.getElementById("mode-report");
     const modeHeatmapBtn  = document.getElementById("mode-heatmap");
     const modeQrBtn       = document.getElementById("mode-qr");
-
     const screenReport    = document.getElementById("screen-report");
     const screenHeatmap   = document.getElementById("screen-heatmap");
     const screenQr        = document.getElementById("screen-qr");
 
     const floorSelect     = document.getElementById("floorSelect");
     const sectorGrid      = document.getElementById("sectorGrid");
+    const sectorFloorplan = document.getElementById("sectorFloorplan");
+    const sectorFloorplanCells = document.getElementById("sectorFloorplanCells");
     const hazardSelect    = document.getElementById("hazardSelect");
-    const workSelect      = document.getElementById("workSelect");
-
-    const reportFloorplan       = document.getElementById("reportFloorplan");
-    const reportFloorplanCells  = document.getElementById("reportFloorplanCells");
+    const hazardDetailEl  = document.getElementById("hazardDetail");
 
     const selectedThumbs  = document.getElementById("selectedThumbs");
     const fileInput       = document.getElementById("fileInput");
@@ -691,9 +675,9 @@
     const heatmapFloorplan = document.getElementById("heatmapFloorplan");
     const floorplanCells   = document.getElementById("floorplanCells");
 
-    const csvStart        = document.getElementById("csvStart");
-    const csvEnd          = document.getElementById("csvEnd");
-    const btnCSV          = document.getElementById("btnCSV");
+    const startDateInput  = document.getElementById("startDate");
+    const endDateInput    = document.getElementById("endDate");
+    const btnCSVExport    = document.getElementById("btnCSVExport");
 
     const imageModal      = document.getElementById("imageModal");
     const imageModalImg   = document.getElementById("imageModalImg");
@@ -713,32 +697,24 @@
     const mealLogBody     = document.getElementById("mealLogBody");
 
     /* === 모드 전환 === */
-    function setActiveMode(mode) {
-        modeReportBtn.classList.remove("active");
-        modeHeatmapBtn.classList.remove("active");
-        modeQrBtn.classList.remove("active");
+    function setMode(mode) {
+        [modeReportBtn, modeHeatmapBtn, modeQrBtn].forEach(btn => btn.classList.remove("active"));
+        if (mode === "report")  modeReportBtn.classList.add("active");
+        if (mode === "heatmap") modeHeatmapBtn.classList.add("active");
+        if (mode === "qr")      modeQrBtn.classList.add("active");
 
-        screenReport.style.display  = "none";
-        screenHeatmap.style.display = "none";
-        screenQr.style.display      = "none";
+        screenReport.style.display  = (mode === "report")  ? "" : "none";
+        screenHeatmap.style.display = (mode === "heatmap") ? "" : "none";
+        screenQr.style.display      = (mode === "qr")      ? "" : "none";
 
-        if (mode === "report") {
-            modeReportBtn.classList.add("active");
-            screenReport.style.display = "";
-        } else if (mode === "heatmap") {
-            modeHeatmapBtn.classList.add("active");
-            screenHeatmap.style.display = "";
+        if (mode === "heatmap") {
             updateHeatmap();
             renderAdminLogs();
-        } else if (mode === "qr") {
-            modeQrBtn.classList.add("active");
-            screenQr.style.display = "";
         }
     }
-
-    modeReportBtn.addEventListener("click", () => setActiveMode("report"));
-    modeHeatmapBtn.addEventListener("click", () => setActiveMode("heatmap"));
-    modeQrBtn.addEventListener("click", () => setActiveMode("qr"));
+    modeReportBtn.addEventListener("click", () => setMode("report"));
+    modeHeatmapBtn.addEventListener("click", () => setMode("heatmap"));
+    modeQrBtn.addEventListener("click", () => setMode("qr"));
 
     /* === 초기화 === */
     function initFloorSelects() {
@@ -756,92 +732,25 @@
 
         floorSelect.value     = "0";
         heatFloorSelect.value = "0";
-        renderSectorButtons();
+        renderSectorSelection();
     }
 
-    function renderSectorButtons() {
-        const floor = floors[selectedFloorIndex];
-
-        // 34구역 층(1F~6F) → 평면도 선택
-        if (floor.sectors.length === 34) {
-            sectorGrid.style.display = "none";
-            reportFloorplan.style.display = "block";
-            renderReportFloorplan(floor);
-        } else {
-            // B1 → 버튼 그리드
-            reportFloorplan.style.display = "none";
-            sectorGrid.style.display = "grid";
-            sectorGrid.innerHTML = "";
-
-            floor.sectors.forEach(sectorId => {
-                const btn = document.createElement("div");
-                btn.className = "sector-btn" + (selectedSectorId === sectorId ? " selected" : "");
-                btn.textContent = sectorId + " 구역";
-                btn.dataset.sectorId = sectorId;
-                btn.addEventListener("click", () => {
-                    selectedSectorId = sectorId;
-                    renderSectorButtons();
-                    updateRegisterButtonState();
-                });
-                sectorGrid.appendChild(btn);
-            });
-        }
-    }
-
-    function renderReportFloorplan(floor) {
-        reportFloorplanCells.innerHTML = "";
-
-        const exampleId = floor.sectors[0]; // 예: "B-1"
-        const prefix = exampleId.split("-")[0];
-
-        for (let i = 1; i <= 34; i++) {
-            const key = String(i);
-            const layout = sectorLayout34[key];
-            if (!layout) continue;
-
-            const sectorId = `${prefix}-${i}`;
-
-            const cell = document.createElement("div");
-            cell.className = "floorplan-cell-select" +
-                             (selectedSectorId === sectorId ? " selected" : "");
-            cell.style.left   = (layout.x * 100) + "%";
-            cell.style.top    = (layout.y * 100) + "%";
-            cell.style.width  = (layout.w * 100) + "%";
-            cell.style.height = (layout.h * 100) + "%";
-            cell.innerHTML = `<div>${sectorId}</div>`;
-
-            cell.addEventListener("click", () => {
-                selectedSectorId = sectorId;
-                renderReportFloorplan(floor);
-                updateRegisterButtonState();
-            });
-
-            reportFloorplanCells.appendChild(cell);
-        }
-    }
-
-    function initHazardWorkSelects() {
+    function initHazardSelect() {
         hazardTypes.forEach(h => {
             const opt = document.createElement("option");
             opt.value = h.id;
             opt.textContent = h.label;
             hazardSelect.appendChild(opt);
         });
-        workTypes.forEach(w => {
-            const opt = document.createElement("option");
-            opt.value = w.id;
-            opt.textContent = w.label;
-            workSelect.appendChild(opt);
-        });
+        hazardSelect.value = hazardTypes[0].id;
     }
 
     floorSelect.addEventListener("change", () => {
         selectedFloorIndex = parseInt(floorSelect.value, 10);
         selectedSectorId = null;
-        renderSectorButtons();
+        renderSectorSelection();
         updateRegisterButtonState();
     });
-
     heatFloorSelect.addEventListener("change", () => {
         selectedFloorIndex = parseInt(heatFloorSelect.value, 10);
         updateHeatmap();
@@ -850,9 +759,61 @@
     hazardSelect.addEventListener("change", () => {
         selectedHazard = hazardSelect.value;
     });
-    workSelect.addEventListener("change", () => {
-        selectedWork = workSelect.value;
-    });
+
+    /* === 신고 화면: 섹터 선택 렌더링 === */
+    function renderSectorSelection() {
+        const floor = floors[selectedFloorIndex];
+
+        if (floor.id === "B1") {
+            // B1 : 버튼 그리드
+            sectorGrid.style.display = "grid";
+            sectorFloorplan.style.display = "none";
+            sectorGrid.innerHTML = "";
+
+            floor.sectors.forEach(sectorId => {
+                const btn = document.createElement("div");
+                btn.className = "sector-btn" + (selectedSectorId === sectorId ? " selected" : "");
+                btn.textContent = sectorId + " 구역";
+                btn.addEventListener("click", () => {
+                    selectedSectorId = sectorId;
+                    renderSectorSelection();
+                    updateRegisterButtonState();
+                });
+                sectorGrid.appendChild(btn);
+            });
+        } else {
+            // 1~6층 : 평면도에서 선택
+            sectorGrid.style.display = "none";
+            sectorFloorplan.style.display = "block";
+            sectorFloorplanCells.innerHTML = "";
+
+            const sectors = floor.sectors;
+            const totalCells = sectors.length;
+
+            for (let i = 1; i <= totalCells; i++) {
+                const layout = sectorLayout[i];
+                if (!layout) continue;
+
+                const sectorId = sectors[i - 1];
+                const cell = document.createElement("div");
+                cell.className = "floorplan-cell floorplan-cell-select" +
+                                 (selectedSectorId === sectorId ? " selected" : "");
+                cell.style.left   = (layout.x * 100) + "%";
+                cell.style.top    = (layout.y * 100) + "%";
+                cell.style.width  = (layout.w * 100) + "%";
+                cell.style.height = (layout.h * 100) + "%";
+                cell.innerHTML = `<div>${sectorId}</div>`;
+
+                cell.addEventListener("click", () => {
+                    selectedSectorId = sectorId;
+                    renderSectorSelection();
+                    updateRegisterButtonState();
+                });
+
+                sectorFloorplanCells.appendChild(cell);
+            }
+        }
+    }
 
     /* === 사진 첨부 === */
     btnAlbum.addEventListener("click", () => {
@@ -863,7 +824,6 @@
         fileInput.setAttribute("capture", "environment");
         fileInput.click();
     });
-
     fileInput.addEventListener("change", (e) => {
         const files = Array.from(e.target.files || []);
         files.forEach(file => {
@@ -895,7 +855,7 @@
         const sectorName = sectorId + " 구역";
         const locationCode = `${floorId}-${sectorId}`;
         const hazardType = selectedHazard;
-        const workType = selectedWork;
+        const hazardDetail = hazardDetailEl.value.trim();
         const date = new Date();
 
         const images = selectedImages.map(imgObj => ({ url: imgObj.url }));
@@ -908,7 +868,7 @@
             sectorName,
             locationCode,
             hazardType,
-            workType,
+            hazardDetail,
             date,
             images
         };
@@ -917,18 +877,17 @@
 
         selectedSectorId = null;
         selectedImages = [];
+        hazardDetailEl.value = "";
         renderSelectedThumbs();
-        renderSectorButtons();
+        renderSectorSelection();
         renderReportList();
         updateRegisterButtonState();
-        updateCSVButtonState();
-        updateHeatmap(); // 히트맵도 즉시 반영
+        updateHeatmap();
     });
 
     function deleteReport(id) {
         reports = reports.filter(r => r.id !== id);
         renderReportList();
-        updateCSVButtonState();
         updateHeatmap();
     }
 
@@ -950,21 +909,29 @@
 
             const meta2 = document.createElement("div");
             meta2.className = "report-meta";
-            meta2.textContent = `유형: ${report.hazardType} / 작업: ${report.workType}`;
+            meta2.textContent = `위험유형: ${report.hazardType}`;
 
             const meta3 = document.createElement("div");
             meta3.className = "report-meta";
             meta3.textContent = formatDate(report.date);
 
+            card.appendChild(title);
+            card.appendChild(meta1);
+            card.appendChild(meta2);
+
+            if (report.hazardDetail) {
+                const metaDetail = document.createElement("div");
+                metaDetail.className = "report-meta";
+                metaDetail.textContent = `기타사항: ${report.hazardDetail}`;
+                card.appendChild(metaDetail);
+            }
+
+            card.appendChild(meta3);
+
             const del = document.createElement("button");
             del.className = "report-delete";
             del.textContent = "🗑";
             del.addEventListener("click", () => deleteReport(report.id));
-
-            card.appendChild(title);
-            card.appendChild(meta1);
-            card.appendChild(meta2);
-            card.appendChild(meta3);
             card.appendChild(del);
 
             if (report.images && report.images.length > 0) {
@@ -1004,36 +971,19 @@
     });
 
     /* === CSV 내보내기 === */
-    function updateCSVButtonState() {
+    btnCSVExport.addEventListener("click", () => {
         if (reports.length === 0) {
-            btnCSV.classList.add("disabled");
-        } else {
-            btnCSV.classList.remove("disabled");
+            alert("내보낼 신고 데이터가 없습니다.");
+            return;
         }
-    }
 
-    btnCSV.addEventListener("click", () => {
-        if (reports.length === 0 || btnCSV.classList.contains("disabled")) return;
-
-        const startStr = csvStart.value;
-        const endStr   = csvEnd.value;
-
-        let startDate = null;
-        let endDate   = null;
-
-        if (startStr) {
-            startDate = new Date(startStr);
-            startDate.setHours(0,0,0,0);
-        }
-        if (endStr) {
-            endDate = new Date(endStr);
-            endDate.setHours(23,59,59,999);
-        }
+        let startDate = startDateInput.value ? new Date(startDateInput.value + "T00:00:00") : null;
+        let endDate   = endDateInput.value   ? new Date(endDateInput.value   + "T23:59:59") : null;
 
         const filtered = reports.filter(r => {
-            const d = r.date;
-            if (startDate && d < startDate) return false;
-            if (endDate && d > endDate)   return false;
+            if (!startDate && !endDate) return true;
+            if (startDate && r.date < startDate) return false;
+            if (endDate && r.date > endDate) return false;
             return true;
         });
 
@@ -1042,7 +992,7 @@
             return;
         }
 
-        let csv = "floorId,floorName,sectorId,sectorName,locationCode,hazardType,workType,date,imageCount\n";
+        let csv = "floorId,floorName,sectorId,sectorName,locationCode,hazardType,hazardDetail,date,imageCount\n";
         filtered.forEach(r => {
             const dateStr = formatCSVDate(r.date);
             const line = [
@@ -1052,19 +1002,19 @@
                 quote(r.sectorName),
                 r.locationCode,
                 quote(r.hazardType),
-                quote(r.workType),
+                quote(r.hazardDetail || ""),
                 dateStr,
                 r.images ? r.images.length : 0
             ].join(",");
             csv += line + "\n";
         });
 
-        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
         const blob = new Blob([bom, csv], { type: "text/csv;charset=utf-8;" });
 
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        const ts = new Date();
+        const a   = document.createElement("a");
+        const ts  = new Date();
         const name = `Reports_${formatFilenameDate(ts)}.csv`;
         a.href = url;
         a.download = name;
@@ -1082,8 +1032,8 @@
         const yy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
-        const hh = String(d.getHours()).padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
+        const hh = String(d.getHours()).toString().padStart(2, "0");
+        const mi = String(d.getMinutes()).toString().padStart(2, "0");
         return `${yy}.${mm}.${dd} ${hh}:${mi}`;
     }
     function formatCSVDate(d) {
@@ -1091,8 +1041,8 @@
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
-        const ss = String(d.getSeconds()).padStart(2, "0");
+        const mi = String(d.getMinutes()).toString().padStart(2, "0");
+        const ss = String(d.getSeconds()).toString().padStart(2, "0");
         return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
     function formatFilenameDate(d) {
@@ -1100,12 +1050,12 @@
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
-        const ss = String(d.getSeconds()).padStart(2, "0");
+        const mi = String(d.getMinutes()).toString().padStart(2, "0");
+        const ss = String(d.getSeconds()).toString().padStart(2, "0");
         return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
     }
 
-    /* === 히트맵 색상 === */
+    /* === 히트맵 색 === */
     function heatColor(count) {
         if (count === 0) return "rgba(52,199,89,0.5)";
         if (count <= 2)  return "rgba(255,204,0,0.8)";
@@ -1118,34 +1068,8 @@
         const floor = floors[selectedFloorIndex];
         const floorId = floor.id;
 
-        // 34구역 층(1~6층)은 평면도 히트맵, B1은 기본 그리드
-        if (floor.sectors.length === 34) {
-            heatmapGrid.style.display = "none";
-            heatmapFloorplan.style.display = "block";
-            floorplanCells.innerHTML = "";
-
-            const exampleId = floor.sectors[0]; // 예: B-1, C-1 ...
-            const prefix = exampleId.split("-")[0];
-
-            for (let i = 1; i <= 34; i++) {
-                const key = String(i);
-                const layout = sectorLayout34[key];
-                if (!layout) continue;
-
-                const sectorId = `${prefix}-${i}`;
-                const count = reports.filter(r => r.floorId === floorId && r.sectorId === sectorId).length;
-
-                const cell = document.createElement("div");
-                cell.className = "floorplan-cell";
-                cell.style.left   = (layout.x * 100) + "%";
-                cell.style.top    = (layout.y * 100) + "%";
-                cell.style.width  = (layout.w * 100) + "%";
-                cell.style.height = (layout.h * 100) + "%";
-                cell.style.background = heatColor(count);
-                cell.innerHTML = `<div>${sectorId}</div><div style="font-size:11px;">${count}건</div>`;
-                floorplanCells.appendChild(cell);
-            }
-        } else {
+        if (floor.id === "B1") {
+            // B1 : 기존 그리드 히트맵
             heatmapFloorplan.style.display = "none";
             heatmapGrid.style.display = "grid";
             heatmapGrid.innerHTML = "";
@@ -1155,14 +1079,39 @@
                 const cell = document.createElement("div");
                 cell.className = "heat-cell";
                 cell.style.background = heatColor(count);
-                const label = `${sectorId} 구역`;
-                cell.innerHTML = `<div>${label}</div><div style="font-size:12px;">${count}건</div>`;
+                cell.innerHTML = `<div>${sectorId} 구역</div><div>${count}건</div>`;
                 heatmapGrid.appendChild(cell);
             });
+        } else {
+            // 1~6층 : 평면도 위 히트맵
+            heatmapGrid.style.display = "none";
+            heatmapFloorplan.style.display = "block";
+            floorplanCells.innerHTML = "";
+
+            const sectors = floor.sectors;
+            const totalCells = sectors.length;
+
+            for (let i = 1; i <= totalCells; i++) {
+                const layout = sectorLayout[i];
+                if (!layout) continue;
+
+                const sectorId = sectors[i - 1];
+                const count = reports.filter(r => r.floorId === floorId && r.sectorId === sectorId).length;
+
+                const cell = document.createElement("div");
+                cell.className = "floorplan-cell";
+                cell.style.left   = (layout.x * 100) + "%";
+                cell.style.top    = (layout.y * 100) + "%";
+                cell.style.width  = (layout.w * 100) + "%";
+                cell.style.height = (layout.h * 100) + "%";
+                cell.style.background = heatColor(count);
+                cell.innerHTML = `<div>${sectorId}</div><div>${count}건</div>`;
+                floorplanCells.appendChild(cell);
+            }
         }
     }
 
-    /* === 출입/식권 데모 기능 === */
+    /* === 출입/식권 데모 === */
     btnPassQR.addEventListener("click", () => {
         const workerId = workerIdInput.value.trim();
         if (!workerId) {
@@ -1191,7 +1140,6 @@
         entryLogs.unshift(log);
         renderAdminLogs();
     }
-
     btnMockEntryIn.addEventListener("click", () => addEntryLog("입장"));
     btnMockEntryOut.addEventListener("click", () => addEntryLog("퇴장"));
 
@@ -1220,7 +1168,6 @@
         renderAdminLogs();
     });
 
-    /* === 관리자 로그 렌더링 === */
     function renderAdminLogs() {
         // 출입 로그
         entryLogBody.innerHTML = "";
@@ -1279,11 +1226,11 @@
 
     /* === 초기 실행 === */
     initFloorSelects();
-    initHazardWorkSelects();
+    initHazardSelect();
     renderReportList();
-    updateCSVButtonState();
     renderAdminLogs();
-    setActiveMode("report");
+    updateRegisterButtonState();
+    updateHeatmap();
 </script>
 </body>
 </html>
