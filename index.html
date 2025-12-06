@@ -200,49 +200,46 @@
             cursor: pointer;
         }
 
-        /* 기본 히트맵 그리드 (6층 제외) */
-        .heatmap-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .heat-cell {
-            border-radius: 8px;
-            padding: 10px;
-            color: #ffffff;
-            font-size: 13px;
-            text-align: center;
-        }
+function updateHeatmap() {
+    const floor = floors[selectedFloorIndex];
 
-        /* 6층 평면도 위 히트맵 */
-        .floorplan-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-            margin-top: 12px;
-        }
-        .floorplan-img {
-            width: 100%;
-            display: block;
-        }
-        #floorplanCells {
-            position: absolute;
-            inset: 0;
-        }
-        .floorplan-cell {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            color: #ffffff;
-            font-size: 12px;
-            text-align: center;
-            padding: 2px;
-            pointer-events: none;
-        }
+    // 층별 평면도 이미지 변경
+    if (floor.id === "6F") {
+        planImage.src = "plan_6f.png";
+    }
+
+    // 기존 오버레이 제거
+    planOverlay.innerHTML = "";
+
+    // 좌표 매핑 불러오기
+    const layoutForFloor = sectorLayout[floor.id] || {};
+
+    // 섹터 박스 생성
+    floor.sectors.forEach(sectorId => {
+        const layout = layoutForFloor[sectorId];
+        if (!layout) return;
+
+        const count = reports.filter(
+            r => r.floorId === floor.id && r.sectorId === sectorId
+        ).length;
+
+        const div = document.createElement("div");
+        div.className = "plan-area";
+
+        // 박스 위치/크기 지정
+        div.style.left   = (layout.x * 100) + "%";
+        div.style.top    = (layout.y * 100) + "%";
+        div.style.width  = (layout.w * 100) + "%";
+        div.style.height = (layout.h * 100) + "%";
+
+        // 색 지정
+        div.style.background = heatColor(count);
+
+        div.innerHTML = `<div>${sectorId}번<br>${count}건</div>`;
+
+        planOverlay.appendChild(div);
+    });
+}
 
         /* 하단 CSV 버튼바 */
         .bottom-bar {
@@ -1169,4 +1166,5 @@
 </script>
 </body>
 </html>
+
 
