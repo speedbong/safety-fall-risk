@@ -200,46 +200,52 @@
             cursor: pointer;
         }
 
-function updateHeatmap() {
-    const floor = floors[selectedFloorIndex];
+        /* 히트맵 */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .heat-cell {
+            border-radius: 8px;
+            padding: 10px;
+            color: #ffffff;
+            font-size: 13px;
+            text-align: center;
+        }
 
-    // 층별 평면도 이미지 변경
-    if (floor.id === "6F") {
-        planImage.src = "plan_6f.png";
-    }
-
-    // 기존 오버레이 제거
-    planOverlay.innerHTML = "";
-
-    // 좌표 매핑 불러오기
-    const layoutForFloor = sectorLayout[floor.id] || {};
-
-    // 섹터 박스 생성
-    floor.sectors.forEach(sectorId => {
-        const layout = layoutForFloor[sectorId];
-        if (!layout) return;
-
-        const count = reports.filter(
-            r => r.floorId === floor.id && r.sectorId === sectorId
-        ).length;
-
-        const div = document.createElement("div");
-        div.className = "plan-area";
-
-        // 박스 위치/크기 지정
-        div.style.left   = (layout.x * 100) + "%";
-        div.style.top    = (layout.y * 100) + "%";
-        div.style.width  = (layout.w * 100) + "%";
-        div.style.height = (layout.h * 100) + "%";
-
-        // 색 지정
-        div.style.background = heatColor(count);
-
-        div.innerHTML = `<div>${sectorId}번<br>${count}건</div>`;
-
-        planOverlay.appendChild(div);
-    });
-}
+        /* 평면도 컨테이너 (6층 전용) */
+        #planContainer {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 16px;
+            display: none; /* 기본은 숨김, 6층일 때만 보여줌 */
+        }
+        #planImage {
+            width: 100%;
+            display: block;
+        }
+        #planOverlay {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .plan-sector-cell {
+            position: absolute;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 10px;
+            text-align: center;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         /* 하단 CSV 버튼바 */
         .bottom-bar {
@@ -1166,5 +1172,6 @@ function updateHeatmap() {
 </script>
 </body>
 </html>
+
 
 
