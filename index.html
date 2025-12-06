@@ -58,24 +58,6 @@
             margin: 16px 0 6px;
         }
 
-        .segmented-control {
-            display: inline-flex;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #d0d0d4;
-        }
-        .segmented-control button {
-            border: none;
-            padding: 6px 10px;
-            background: #ffffff;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .segmented-control button.active {
-            background: #007aff;
-            color: #ffffff;
-        }
-
         .floor-picker {
             margin-top: 4px;
         }
@@ -301,6 +283,67 @@
             font-size: 16px;
         }
 
+        /* 출입/식권 데모용 입력 */
+        .text-input {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d4;
+        }
+        .small-btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .small-btn-row button {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #e5e5ea;
+        }
+        .qr-box {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .qr-box-inner {
+            padding: 8px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .qr-label {
+            font-size: 12px;
+            color: #444;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .log-table th,
+        .log-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .log-table th {
+            background: #f0f0f5;
+            text-align: left;
+            font-weight: 600;
+        }
+
         /* ✅ 모바일 최적화 */
         @media (max-width: 600px) {
             header {
@@ -337,7 +380,7 @@
     <h1>넘어짐 위험 관리</h1>
     <div class="mode-toggle">
         <div class="mode-btn active" id="mode-report">신고 등록</div>
-        <div class="mode-btn" id="mode-heatmap">히트맵 보기</div>
+        <div class="mode-btn" id="mode-heatmap">히트맵 보기 (관리자)</div>
     </div>
 </header>
 
@@ -374,13 +417,44 @@
 
         <button class="primary-btn" id="btnRegister">위험 등록하기</button>
 
+        <!-- ✅ ⑤ 출입 / 식권 데모 영역 -->
+        <div class="section-title">⑤ 출입·식권 데모 (QR 기반 아이디어)</div>
+        <div>
+            <div style="font-size:13px; margin-bottom:4px;">작업자 이름 또는 ID</div>
+            <input id="workerIdInput" class="text-input" placeholder="예: 홍길동, W001 등">
+        </div>
+        <div class="small-btn-row">
+            <button id="btnPassQR">출입용 QR 생성</button>
+            <button id="btnMockEntryIn">입장 로그 추가(데모)</button>
+            <button id="btnMockEntryOut">퇴장 로그 추가(데모)</button>
+        </div>
+        <div class="qr-box">
+            <div>
+                <div class="qr-label">출입용 QR (데모)</div>
+                <div id="passQrBox" class="qr-box-inner"></div>
+            </div>
+        </div>
+
+        <div style="margin-top:10px;" class="small-btn-row">
+            <button id="btnMealQR">오늘 식권 QR 발급(데모)</button>
+        </div>
+        <div class="qr-box">
+            <div>
+                <div class="qr-label">식권 QR (데모)</div>
+                <div id="mealQrBox" class="qr-box-inner"></div>
+            </div>
+            <div class="qr-label" id="mealStatus" style="min-width: 160px;">
+                아직 오늘 식권이 발급되지 않았습니다.
+            </div>
+        </div>
+
         <div class="reports-header">
             <h2>등록된 신고 <span id="reportCount">(0건)</span></h2>
         </div>
         <div id="reportList"></div>
     </section>
 
-    <!-- 히트맵 화면 -->
+    <!-- 히트맵 + 관리자 로그 화면 -->
     <section id="screen-heatmap" style="display:none;">
         <div class="section-title">층 선택</div>
         <div class="floor-picker">
@@ -391,6 +465,35 @@
             <span style="font-size: 11px; color:#666;">※ 색이 진할수록 신고 횟수가 많은 구역입니다.</span>
         </div>
         <div id="heatmapGrid" class="heatmap-grid"></div>
+
+        <!-- ✅ 관리자용 출입/식권 로그 Mock -->
+        <div class="section-title" style="margin-top:18px;">출입 로그 (데모)</div>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>시간</th>
+                    <th>작업자</th>
+                    <th>구분</th>
+                </tr>
+            </thead>
+            <tbody id="entryLogBody">
+                <!-- JS에서 채움 -->
+            </tbody>
+        </table>
+
+        <div class="section-title" style="margin-top:18px;">식권 발급 로그 (데모)</div>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>시간</th>
+                    <th>작업자</th>
+                    <th>토큰</th>
+                </tr>
+            </thead>
+            <tbody id="mealLogBody">
+                <!-- JS에서 채움 -->
+            </tbody>
+        </table>
     </section>
 </main>
 
@@ -409,8 +512,11 @@
     </div>
 </div>
 
+<!-- ✅ QR 코드 라이브러리 (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-    /* === 이하 JS는 동일 === */
+    /* === 기본 데이터 구조 === */
     const floors = [
         { id: "B1", name: "지하 1층", sectors: ["A-1", "A-2", "B-1", "B-2"] },
         { id: "1F", name: "1층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
@@ -443,6 +549,14 @@
     let selectedWork = workTypes[0].id;
     let selectedImages = [];
 
+    // 출입/식권 로그 (데모용)
+    let entryLogs = []; // {id, workerId, time, type}
+    let mealLogs  = []; // {id, workerId, time, token}
+
+    // QR 인스턴스
+    let passQrInstance = null;
+    let mealQrInstance = null;
+
     const modeReportBtn = document.getElementById("mode-report");
     const modeHeatmapBtn = document.getElementById("mode-heatmap");
     const screenReport = document.getElementById("screen-report");
@@ -470,6 +584,22 @@
     const imageModalImg = document.getElementById("imageModalImg");
     const imageModalClose = document.getElementById("imageModalClose");
 
+    // 출입/식권 데모 DOM
+    const workerIdInput = document.getElementById("workerIdInput");
+    const btnPassQR = document.getElementById("btnPassQR");
+    const btnMockEntryIn = document.getElementById("btnMockEntryIn");
+    const btnMockEntryOut = document.getElementById("btnMockEntryOut");
+    const passQrBox = document.getElementById("passQrBox");
+
+    const btnMealQR = document.getElementById("btnMealQR");
+    const mealQrBox = document.getElementById("mealQrBox");
+    const mealStatus = document.getElementById("mealStatus");
+
+    // 관리자 로그 테이블 DOM
+    const entryLogBody = document.getElementById("entryLogBody");
+    const mealLogBody = document.getElementById("mealLogBody");
+
+    /* === 모드 전환 === */
     modeReportBtn.addEventListener("click", () => {
         modeReportBtn.classList.add("active");
         modeHeatmapBtn.classList.remove("active");
@@ -482,8 +612,10 @@
         screenReport.style.display = "none";
         screenHeatmap.style.display = "";
         updateHeatmap();
+        renderAdminLogs();
     });
 
+    /* === 초기화 === */
     function initFloorSelects() {
         floors.forEach((f, index) => {
             const option1 = document.createElement("option");
@@ -548,6 +680,7 @@
         selectedWork = workSelect.value;
     });
 
+    /* === 사진 첨부 === */
     btnAlbum.addEventListener("click", () => {
         fileInput.removeAttribute("capture");
         fileInput.click();
@@ -578,6 +711,7 @@
         });
     }
 
+    /* === 신고 등록 === */
     btnRegister.addEventListener("click", () => {
         if (!selectedSectorId) return;
 
@@ -663,7 +797,7 @@
             if (report.images && report.images.length > 0) {
                 const photoRow = document.createElement("div");
                 photoRow.className = "report-photos";
-                report.images.forEach((imgObj, idx) => {
+                report.images.forEach((imgObj) => {
                     const img = document.createElement("img");
                     img.src = imgObj.url;
                     img.addEventListener("click", () => {
@@ -682,6 +816,7 @@
         btnRegister.disabled = !selectedSectorId;
     }
 
+    /* === 이미지 모달 === */
     function openImageModal(url) {
         imageModalImg.src = url;
         imageModal.style.display = "flex";
@@ -697,6 +832,7 @@
         }
     });
 
+    /* === CSV 내보내기 === */
     function updateCSVButtonState() {
         if (reports.length === 0) {
             btnCSV.classList.add("disabled");
@@ -758,7 +894,7 @@
         const yy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
-        const hh = String(d.getHours()).padStart(2, "0");
+        const hh = String(d.getHours() + 0).toString().padStart(2, "0");
         const mi = String(d.getMinutes()).padStart(2, "0");
         const ss = String(d.getSeconds()).padStart(2, "0");
         return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
@@ -768,12 +904,13 @@
         const yy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
-        const hh = String(d.getHours()).padStart(2, "0");
+        const hh = String(d.getHours()).toString().padStart(2, "0");
         const mi = String(d.getMinutes()).padStart(2, "0");
         const ss = String(d.getSeconds()).padStart(2, "0");
         return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
     }
 
+    /* === 히트맵 === */
     heatFloorSelect.addEventListener("change", () => {
         selectedFloorIndex = parseInt(heatFloorSelect.value, 10);
         updateHeatmap();
@@ -800,10 +937,138 @@
         return "rgba(255,59,48,0.9)";
     }
 
+    /* === 출입/식권 데모 기능 === */
+    btnPassQR.addEventListener("click", () => {
+        const workerId = workerIdInput.value.trim();
+        if (!workerId) {
+            alert("작업자 이름 또는 ID를 입력해주세요.");
+            return;
+        }
+        if (!passQrInstance) {
+            passQrBox.innerHTML = "";
+            passQrInstance = new QRCode(passQrBox, {
+                text: "",
+                width: 160,
+                height: 160
+            });
+        }
+        const payload = `PASS:${workerId}`;
+        passQrInstance.makeCode(payload);
+    });
+
+    function addEntryLog(type) {
+        const workerId = workerIdInput.value.trim();
+        if (!workerId) {
+            alert("작업자 이름 또는 ID를 입력한 후 사용해주세요.");
+            return;
+        }
+        const now = new Date();
+        const log = {
+            id: crypto.randomUUID(),
+            workerId,
+            time: now,
+            type
+        };
+        entryLogs.unshift(log);
+        renderAdminLogs();
+    }
+
+    btnMockEntryIn.addEventListener("click", () => addEntryLog("입장"));
+    btnMockEntryOut.addEventListener("click", () => addEntryLog("퇴장"));
+
+    btnMealQR.addEventListener("click", () => {
+        const workerId = workerIdInput.value.trim();
+        if (!workerId) {
+            alert("작업자 이름 또는 ID를 입력한 후 사용해주세요.");
+            return;
+        }
+        if (!mealQrInstance) {
+            mealQrBox.innerHTML = "";
+            mealQrInstance = new QRCode(mealQrBox, {
+                text: "",
+                width: 160,
+                height: 160
+            });
+        }
+        const now = new Date();
+        const token = `MEAL-${formatFilenameDate(now)}-${Math.floor(1000 + Math.random() * 9000)}`;
+        mealQrInstance.makeCode(token);
+
+        mealStatus.textContent = `오늘 식권 발급됨 (ID: ${workerId})`;
+
+        const log = {
+            id: crypto.randomUUID(),
+            workerId,
+            time: now,
+            token
+        };
+        mealLogs.unshift(log);
+        renderAdminLogs();
+    });
+
+    /* === 관리자 로그 렌더링 === */
+    function renderAdminLogs() {
+        // 출입 로그
+        entryLogBody.innerHTML = "";
+        if (entryLogs.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 3;
+            td.textContent = "출입 로그가 없습니다.";
+            td.style.textAlign = "center";
+            td.style.color = "#666";
+            tr.appendChild(td);
+            entryLogBody.appendChild(tr);
+        } else {
+            entryLogs.forEach(log => {
+                const tr = document.createElement("tr");
+                const tdTime = document.createElement("td");
+                const tdWorker = document.createElement("td");
+                const tdType = document.createElement("td");
+                tdTime.textContent = formatDate(log.time);
+                tdWorker.textContent = log.workerId;
+                tdType.textContent = log.type;
+                tr.appendChild(tdTime);
+                tr.appendChild(tdWorker);
+                tr.appendChild(tdType);
+                entryLogBody.appendChild(tr);
+            });
+        }
+
+        // 식권 로그
+        mealLogBody.innerHTML = "";
+        if (mealLogs.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 3;
+            td.textContent = "식권 발급 로그가 없습니다.";
+            td.style.textAlign = "center";
+            td.style.color = "#666";
+            tr.appendChild(td);
+            mealLogBody.appendChild(tr);
+        } else {
+            mealLogs.forEach(log => {
+                const tr = document.createElement("tr");
+                const tdTime = document.createElement("td");
+                const tdWorker = document.createElement("td");
+                const tdToken = document.createElement("td");
+                tdTime.textContent = formatDate(log.time);
+                tdWorker.textContent = log.workerId;
+                tdToken.textContent = log.token;
+                tr.appendChild(tdTime);
+                tr.appendChild(tdWorker);
+                tr.appendChild(tdToken);
+                mealLogBody.appendChild(tr);
+            });
+        }
+    }
+
+    /* === 초기 실행 === */
     initFloorSelects();
     initHazardWorkSelects();
     renderReportList();
     updateCSVButtonState();
+    renderAdminLogs();
 </script>
 </body>
 </html>
