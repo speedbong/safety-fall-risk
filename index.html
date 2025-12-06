@@ -46,7 +46,7 @@
         }
 
         main {
-            padding: 12px 16px 80px 16px;
+            padding: 12px 16px 40px 16px;
             max-width: 960px;
             margin: 0 auto;
         }
@@ -200,22 +200,7 @@
             cursor: pointer;
         }
 
-        /* 히트맵 */
-        .heatmap-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .heat-cell {
-            border-radius: 8px;
-            padding: 10px;
-            color: #ffffff;
-            font-size: 13px;
-            text-align: center;
-        }
-
-        /* 기본 히트맵 (6층 제외) */
+        /* 기본 히트맵 그리드 */
         .heatmap-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -259,17 +244,20 @@
             pointer-events: none;
         }
 
-        /* 하단 CSV 버튼바 */
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 8px 16px;
-            background: rgba(248,248,250,0.95);
-            box-shadow: 0 -1px 4px rgba(0,0,0,0.12);
+        /* CSV 내보내기 영역 (관리자 탭 내부) */
+        .csv-export-row {
             display: flex;
-            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .date-input {
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d4;
+            font-size: 13px;
         }
         .csv-btn {
             border: none;
@@ -387,7 +375,7 @@
         /* ✅ 모바일 최적화 */
         @media (max-width: 600px) {
             header { padding: 10px 12px; }
-            main   { padding: 10px 12px 80px 12px; }
+            main   { padding: 10px 12px 40px 12px; }
             h1     { font-size: 16px; }
             .section-title {
                 margin-top: 12px;
@@ -503,6 +491,17 @@
         <!-- 그 외 층 기본 그리드 히트맵 -->
         <div id="heatmapGrid" class="heatmap-grid"></div>
 
+        <!-- CSV 내보내기 (관리자용) -->
+        <div class="section-title" style="margin-top:18px;">신고 데이터 내보내기 (CSV)</div>
+        <div class="csv-export-row">
+            <input type="date" id="csvStartDate" class="date-input">
+            <span>~</span>
+            <input type="date" id="csvEndDate" class="date-input">
+            <button id="btnCSV" class="csv-btn disabled">
+                <span>📤</span><span>CSV로 내보내기</span>
+            </button>
+        </div>
+
         <!-- 관리자용 출입/식권 로그 -->
         <div class="section-title" style="margin-top:18px;">출입 로그 (데모)</div>
         <table class="log-table">
@@ -529,13 +528,6 @@
         </table>
     </section>
 </main>
-
-<!-- 하단 CSV 버튼 -->
-<div class="bottom-bar">
-    <button id="btnCSV" class="csv-btn disabled">
-        <span>📤</span><span>CSV로 내보내기</span>
-    </button>
-</div>
 
 <!-- 이미지 확대 모달 -->
 <div id="imageModal" class="image-modal-backdrop" style="display:none;">
@@ -586,21 +578,14 @@
     /* 6층 평면도 레이아웃 (비율 값) */
     const sectorLayout = {
         "6F": {
-            // 왼쪽 상부 1~4
             "1":  { x: 0.019,  y: 0.383, w: 0.050,  h: 0.243 },
             "2":  { x: 0.072,  y: 0.383, w: 0.087,  h: 0.243 },
             "3":  { x: 0.1639, y: 0.383, w: 0.103,  h: 0.243 },
             "4":  { x: 0.270,  y: 0.383, w: 0.072,  h: 0.243 },
-
-            // 중앙 계단(5)
             "5":  { x: 0.346,  y: 0.383, w: 0.045,  h: 0.243 },
-
-            // 복도 6~8
             "6":  { x: 0.019,  y: 0.633, w: 0.151,  h: 0.0755 },
             "7":  { x: 0.170,  y: 0.633, w: 0.113,  h: 0.0755 },
             "8":  { x: 0.283,  y: 0.633, w: 0.113,  h: 0.0755 },
-
-            // 하부 객실 9~15
             "9":  { x: 0.019,  y: 0.715, w: 0.050,  h: 0.243 },
             "10": { x: 0.072,  y: 0.715, w: 0.046,  h: 0.243 },
             "11": { x: 0.123,  y: 0.715, w: 0.046,  h: 0.243 },
@@ -608,34 +593,20 @@
             "13": { x: 0.2275, y: 0.715, w: 0.0525, h: 0.243 },
             "14": { x: 0.284,  y: 0.715, w: 0.052,  h: 0.243 },
             "15": { x: 0.3403, y: 0.715, w: 0.055,  h: 0.243 },
-
-            // 중앙 코어 16
             "16": { x: 0.397,  y: 0.383, w: 0.105,  h: 0.400 },
-
-            // 중앙 화장실/기계실 17,18
             "17": { x: 0.505,  y: 0.383, w: 0.047,  h: 0.243 },
             "18": { x: 0.554,  y: 0.383, w: 0.065,  h: 0.243 },
-
-            // 중앙-우측 연결부 상부 19,20
             "19": { x: 0.622,  y: 0.383, w: 0.101,  h: 0.243 },
             "20": { x: 0.728,  y: 0.383, w: 0.066,  h: 0.243 },
-
-            // 중앙 복도 하부 21~23
             "21": { x: 0.795,  y: 0.383, w: 0.045,  h: 0.243 },
             "22": { x: 0.503,  y: 0.633, w: 0.155,  h: 0.0755 },
             "23": { x: 0.659,  y: 0.633, w: 0.185,  h: 0.0755 },
-
-            // 중앙 아래 블록 객실 24~28
             "24": { x: 0.505,  y: 0.715, w: 0.068,  h: 0.243 },
             "25": { x: 0.577,  y: 0.715, w: 0.080,  h: 0.243 },
             "26": { x: 0.661,  y: 0.715, w: 0.065,  h: 0.243 },
             "27": { x: 0.730,  y: 0.715, w: 0.108,  h: 0.243 },
             "28": { x: 0.842,  y: 0.715, w: 0.150,  h: 0.243 },
-
-            // 우측 계단 29
             "29": { x: 0.845,  y: 0.383, w: 0.036,  h: 0.330 },
-
-            // 우측 블록 객실 30~34
             "30": { x: 0.885,  y: 0.485, w: 0.107,  h: 0.226 },
             "31": { x: 0.885,  y: 0.254, w: 0.107,  h: 0.226 },
             "32": { x: 0.885,  y: 0.020, w: 0.107,  h: 0.2275 },
@@ -676,9 +647,11 @@
     const reportList      = document.getElementById("reportList");
     const reportCount     = document.getElementById("reportCount");
     const btnCSV          = document.getElementById("btnCSV");
+    const csvStartDate    = document.getElementById("csvStartDate");
+    const csvEndDate      = document.getElementById("csvEndDate");
 
-    const heatFloorSelect = document.getElementById("heatFloorSelect");
-    const heatmapGrid     = document.getElementById("heatmapGrid");
+    const heatFloorSelect  = document.getElementById("heatFloorSelect");
+    const heatmapGrid      = document.getElementById("heatmapGrid");
     const heatmapFloorplan = document.getElementById("heatmapFloorplan");
     const floorplanCells   = document.getElementById("floorplanCells");
 
@@ -941,9 +914,29 @@
 
     btnCSV.addEventListener("click", () => {
         if (reports.length === 0) return;
+        if (btnCSV.classList.contains("disabled")) return;
+
+        let filtered = [...reports];
+
+        const sVal = csvStartDate.value;
+        const eVal = csvEndDate.value;
+
+        if (sVal) {
+            const sd = new Date(sVal + "T00:00:00");
+            filtered = filtered.filter(r => r.date >= sd);
+        }
+        if (eVal) {
+            const ed = new Date(eVal + "T23:59:59");
+            filtered = filtered.filter(r => r.date <= ed);
+        }
+
+        if (filtered.length === 0) {
+            alert("선택한 기간에 해당하는 신고가 없습니다.");
+            return;
+        }
 
         let csv = "floorId,floorName,sectorId,sectorName,locationCode,hazardType,workType,date,imageCount\n";
-        reports.forEach(r => {
+        filtered.forEach(r => {
             const dateStr = formatCSVDate(r.date);
             const line = [
                 r.floorId,
@@ -992,7 +985,7 @@
         const dd = String(d.getDate()).padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
         const mi = String(d.getMinutes()).padStart(2, "0");
-        const ss = String(d.getSeconds()).padStart(2, "0");
+        const ss = String(d.getSeconds()).toString().padStart(2, "0");
         return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
     function formatFilenameDate(d) {
@@ -1000,8 +993,8 @@
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
         const hh = String(d.getHours()).toString().padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
-        const ss = String(d.getSeconds()).padStart(2, "0");
+        const mi = String(d.getMinutes()).toString().padStart(2, "0");
+        const ss = String(d.getSeconds()).toString().padStart(2, "0");
         return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
     }
 
@@ -1184,7 +1177,4 @@
 </script>
 </body>
 </html>
-
-
-
 
