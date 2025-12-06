@@ -377,7 +377,7 @@
 </head>
 <body>
 <header>
-    <h1>넘어짐 위험 관리</h1>
+    <h1>건설 현장 위험 관리</h1>
     <div class="mode-toggle">
         <div class="mode-btn active" id="mode-report">신고 등록</div>
         <div class="mode-btn" id="mode-heatmap">히트맵 보기 (관리자)</div>
@@ -518,13 +518,16 @@
 <script>
     /* === 기본 데이터 구조 === */
     const floors = [
-        { id: "B1", name: "지하 1층", sectors: ["A-1", "A-2", "B-1", "B-2"] },
-        { id: "1F", name: "1층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
-        { id: "2F", name: "2층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
-        { id: "3F", name: "3층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
-        { id: "4F", name: "4층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
-        { id: "5F", name: "5층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] },
-        { id: "6F", name: "6층",      sectors: ["A-1", "A-2", "C-1", "C-2", "C-3"] }
+        { id: "B1", name: "지하 1층", sectors: ["A-1", "A-2", "A-3", "A-4"] },
+        { id: "1F", name: "1층",      sectors: ["B-1", "B-2", "B-3", "B-4", "B-5"] },
+        { id: "2F", name: "2층",      sectors: ["C-1", "C-2", "C-3", "C-4", "C-5"] },
+        { id: "3F", name: "3층",      sectors: ["D-1", "D-2", "D-3", "D-4", "D-5"] },
+        { id: "4F", name: "4층",      sectors: ["E-1", "E-2", "E-3", "E-4", "E-5"] },
+        { id: "5F", name: "5층",      sectors: ["F-1", "F-2", "F-3", "F-4", "F-5"] },
+        { id: "6F", name: "6층",      sectors: ["G-1", "G-2", "G-3", "G-4", "G-5", "G-6", "G-7", "G-8", "G-9", "G-10",
+        "G-11", "G-12", "G-13", "G-14", "G-15", "G-16", "G-17", "G-18", "G-19", "G-20",
+        "G-21", "G-22", "G-23", "G-24", "G-25", "G-26", "G-27", "G-28", "G-29", "G-30",
+        "G-31", "G-32", "G-33", "G-34"] }
     ];
 
     const hazardTypes = [
@@ -1072,3 +1075,4 @@
 </script>
 </body>
 </html>
+
