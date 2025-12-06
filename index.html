@@ -1003,31 +1003,47 @@
         return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
     }
 
-    /* === 히트맵 === */
-    heatFloorSelect.addEventListener("change", () => {
-        selectedFloorIndex = parseInt(heatFloorSelect.value, 10);
-        updateHeatmap();
-    });
-
+    /* ========= 히트맵 ========= */
     function updateHeatmap() {
-        heatmapGrid.innerHTML = "";
         const floor = floors[selectedFloorIndex];
+        const floorId = floor.id;
 
-        floor.sectors.forEach(sectorId => {
-            const count = reports.filter(r => r.floorId === floor.id && r.sectorId === sectorId).length;
-            const cell = document.createElement("div");
-            cell.className = "heat-cell";
-            cell.style.background = heatColor(count);
-            cell.innerHTML = `<div>${sectorId} 구역</div><div style="font-size:12px;">${count}건</div>`;
-            heatmapGrid.appendChild(cell);
-        });
-    }
+        if (floorId === "6F") {
+            heatmapGrid.style.display = "none";
+            heatmapFloorplan.style.display = "block";
+            floorplanCells.innerHTML = "";
 
-    function heatColor(count) {
-        if (count === 0) return "rgba(52,199,89,0.5)";
-        if (count <= 2) return "rgba(255,204,0,0.8)";
-        if (count <= 4) return "rgba(255,149,0,0.85)";
-        return "rgba(255,59,48,0.9)";
+            for (let i = 1; i <= 34; i++) {
+                const key = String(i);
+                const layout = sectorLayout["6F"][key];
+                if (!layout) continue;
+                const sectorId = `G-${i}`;
+                const count = reports.filter(r => r.floorId === "6F" && r.sectorId === sectorId).length;
+
+                const cell = document.createElement("div");
+                cell.className = "floorplan-cell";
+                cell.style.left   = (layout.x * 100) + "%";
+                cell.style.top    = (layout.y * 100) + "%";
+                cell.style.width  = (layout.w * 100) + "%";
+                cell.style.height = (layout.h * 100) + "%";
+                cell.style.background = heatColor(count);
+                cell.innerHTML = `<div>${sectorId}</div><div style="font-size:11px;">${count}건</div>`;
+                floorplanCells.appendChild(cell);
+            }
+        } else {
+            heatmapFloorplan.style.display = "none";
+            heatmapGrid.style.display = "grid";
+            heatmapGrid.innerHTML = "";
+            floor.sectors.forEach(sectorId => {
+                const count = reports.filter(r => r.floorId === floorId && r.sectorId === sectorId).length;
+                const cell = document.createElement("div");
+                cell.className = "heat-cell";
+                cell.style.background = heatColor(count);
+                const label = `${sectorId} 구역`;
+                cell.innerHTML = `<div>${label}</div><div style="font-size:12px;">${count}건</div>`;
+                heatmapGrid.appendChild(cell);
+            });
+        }
     }
 
     /* === 출입/식권 데모 기능 === */
@@ -1165,6 +1181,7 @@
 </script>
 </body>
 </html>
+
 
 
 
