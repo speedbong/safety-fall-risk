@@ -479,6 +479,19 @@
         <!-- B1 히트맵용 기본 그리드 -->
         <div id="heatmapGrid" class="heatmap-grid"></div>
 
+        <!-- 🔽 여기부터 새로 추가 🔽 -->
+        <div class="section-title" style="margin-top:18px;">위험 유형별 신고 현황 (현재 선택 층)</div>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>위험 유형</th>
+                    <th>개수</th>
+                </tr>
+            </thead>
+            <tbody id="hazardStatBody"></tbody>
+        </table>
+        <!-- 🔼 여기까지 새로 추가 🔼 -->
+        
         <!-- CSV 내보내기 (날짜 필터) -->
         <div class="section-title" style="margin-top:20px;">신고 내역 CSV 내보내기</div>
         <div class="filter-row">
@@ -698,7 +711,8 @@
 
     const entryLogBody    = document.getElementById("entryLogBody");
     const mealLogBody     = document.getElementById("mealLogBody");
-
+    const hazardStatBody  = document.getElementById("hazardStatBody");
+    
     /* === 모드 전환 === */
     function setMode(mode) {
         [modeReportBtn, modeHeatmapBtn, modeQrBtn].forEach(btn => btn.classList.remove("active"));
@@ -1112,8 +1126,54 @@
                 floorplanCells.appendChild(cell);
             }
         }
+
+        // 🔹현재 층의 위험 유형별 통계도 같이 갱신
+        renderHazardStats(floor);
     }
 
+    /* === 위험 유형별 통계 렌더링 === */
+    function renderHazardStats(floor) {
+        hazardStatBody.innerHTML = "";
+
+        // 현재 선택된 층의 신고만 필터
+        const floorReports = reports.filter(r => r.floorId === floor.id);
+
+        if (floorReports.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 2;
+            td.textContent = "현재 층에 등록된 신고가 없습니다.";
+            td.style.textAlign = "center";
+            td.style.color = "#666";
+            tr.appendChild(td);
+            hazardStatBody.appendChild(tr);
+            return;
+        }
+
+        // 위험유형별 개수 집계
+        const counts = {};
+        hazardTypes.forEach(h => { counts[h.id] = 0; });
+        floorReports.forEach(r => {
+            if (!counts.hasOwnProperty(r.hazardType)) {
+                counts[r.hazardType] = 0;
+            }
+            counts[r.hazardType]++;
+        });
+
+        // 정의된 hazardTypes 순서대로 표에 뿌리기
+        hazardTypes.forEach(h => {
+            const tr = document.createElement("tr");
+            const tdName = document.createElement("td");
+            const tdCount = document.createElement("td");
+            tdName.textContent = h.label;
+            tdCount.textContent = (counts[h.id] || 0) + "건";
+            tr.appendChild(tdName);
+            tr.appendChild(tdCount);
+            hazardStatBody.appendChild(tr);
+        });
+    }
+
+    
     /* === 출입/식권 데모 === */
     btnPassQR.addEventListener("click", () => {
         const workerId = workerIdInput.value.trim();
@@ -1237,6 +1297,7 @@
 </script>
 </body>
 </html>
+
 
 
 
