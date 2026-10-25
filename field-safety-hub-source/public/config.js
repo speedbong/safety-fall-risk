@@ -2,5 +2,5 @@
 window.FIELD_SAFETY_CONFIG = {
   "supabaseUrl": "https://tlxamfpnrhqyqysvvask.supabase.co",
   "supabasePublishableKey": "sb_publishable_8Es-FlWsIa8MWXQ6RsBSWg_a6zRrDrS",
-  "emailFlowsReady": false
+  "emailFlowsReady": true
 };
