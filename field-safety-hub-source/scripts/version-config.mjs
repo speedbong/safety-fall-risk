@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+const content = readFileSync("public/config.js");
+const hash = createHash("sha256").update(content).digest("hex").slice(0, 12);
+const filename = `config.${hash}.js`;
+writeFileSync(`dist/${filename}`, content);
+const html = readFileSync("dist/index.html", "utf8");
+if (!html.includes('src="./config.js"')) throw Error("Config script was not found in build output");
+writeFileSync("dist/index.html", html.replace('src="./config.js"', `src="./${filename}"`));
+console.log(`Versioned public configuration: ${filename}`);

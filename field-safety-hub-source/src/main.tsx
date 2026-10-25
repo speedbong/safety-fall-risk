@@ -17,7 +17,6 @@ function App() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const setup = configError();
-  const emailFlowsReady = window.FIELD_SAFETY_CONFIG?.emailFlowsReady === true;
 
   useEffect(() => {
     if (setup) { setReady(true); return; }
@@ -64,7 +63,6 @@ function App() {
         {notice && <p className="hub-notice" role="status">{notice}</p>}
         {!ready ? <p role="status">로그인 정보를 확인하는 중…</p> : <form onSubmit={async e => {
           e.preventDefault(); if (!client || busy) return; setBusy(true); setError(""); setNotice("");
-          if (!emailFlowsReady && (mode === "signup" || mode === "reset")) { setError("이메일 인증 설정을 준비하고 있습니다."); setBusy(false); return; }
           try {
             const redirectTo = new URL(import.meta.env.BASE_URL, window.location.href).href;
             let result;
@@ -84,8 +82,7 @@ function App() {
           {mode !== "reset" && <div className="field"><label htmlFor="password">비밀번호</label><input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} required minLength={mode === "signin" ? undefined : 10} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} />{mode !== "signin" && <span className="fine">10자 이상으로 설정해 주세요.</span>}</div>}
           <button className="hub-submit" disabled={busy || !client}>{busy ? "처리 중…" : mode === "signup" ? "계정 만들기" : mode === "reset" ? "재설정 이메일 받기" : mode === "password" ? "비밀번호 변경" : "로그인"}<ArrowRight size={18} /></button>
         </form>}
-        <div className="hub-auth-links">{mode !== "signin" && <button disabled={busy} onClick={() => { setMode("signin"); setError(""); setNotice(""); setPassword(""); }}>로그인으로 돌아가기</button>}{mode === "signin" && <><button disabled={busy || !emailFlowsReady} onClick={() => { setMode("signup"); setError(""); setNotice(""); }}>회원가입</button><button disabled={busy || !emailFlowsReady} onClick={() => { setMode("reset"); setError(""); setNotice(""); }}>비밀번호를 잊으셨나요?</button></>}</div>
-        {!emailFlowsReady && <p className="fine" role="status">회원가입·비밀번호 재설정은 이메일 인증 설정을 마친 뒤 사용할 수 있습니다.</p>}
+        <div className="hub-auth-links">{mode !== "signin" && <button disabled={busy} onClick={() => { setMode("signin"); setError(""); setNotice(""); setPassword(""); }}>로그인으로 돌아가기</button>}{mode === "signin" && <><button disabled={busy} onClick={() => { setMode("signup"); setError(""); setNotice(""); }}>회원가입</button><button disabled={busy} onClick={() => { setMode("reset"); setError(""); setNotice(""); }}>비밀번호를 잊으셨나요?</button></>}</div>
         <p className="fine">개인 개발용 · 계정별 데이터 분리<br />작업자·관리자는 같은 계정에서 전환하는 화면입니다.</p>
       </div>}
     </section>
