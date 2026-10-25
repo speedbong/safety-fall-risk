@@ -5,3 +5,4 @@ dist/
 .openai/
 *.tsbuildinfo
 .DS_Store
+supabase/.temp/

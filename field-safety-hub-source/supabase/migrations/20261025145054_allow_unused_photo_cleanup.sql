@@ -1,0 +1,1 @@
+create policy fsh_photo_delete_unused on storage.objects for delete to authenticated using (bucket_id = 'field-safety-photos' and (storage.foldername(name))[1] = (select auth.uid()::text) and not exists (select 1 from public.fsh_reports r where r.owner_id = (select auth.uid()) and (name = any(r.photos) or name = any(r.resolution_photos))));

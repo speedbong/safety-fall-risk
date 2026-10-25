@@ -3,7 +3,7 @@ import { BUCKET, checkConfig, imageExtension } from "./rules";
 
 declare global {
   interface Window {
-    FIELD_SAFETY_CONFIG?: { supabaseUrl: string; supabasePublishableKey: string };
+    FIELD_SAFETY_CONFIG?: { supabaseUrl: string; supabasePublishableKey: string; emailFlowsReady?: boolean };
     supabase?: { createClient: (url: string, key: string, opts: object) => any };
   }
 }
